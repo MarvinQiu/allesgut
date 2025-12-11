@@ -124,7 +124,13 @@ const Social = () => {
       };
       await addPost(post);
       setShowCreateModal(false);
-      setNewPost({ type: 'article', content: '', image: '' });
+      setNewPost({
+        type: 'article',
+        content: '',
+        images: [],
+        videoUrl: '',
+        videoPoster: ''
+      });
       loadPosts(1); // 重新加载第一页
     } catch (error) {
       console.error('创建帖子失败:', error);
@@ -137,6 +143,7 @@ const Social = () => {
         <h1>互动社区</h1>
         <button 
           className="create-post-btn"
+          type="button"
           onClick={() => setShowCreateModal(true)}
         >
           <FontAwesomeIcon icon={faImage} />
@@ -341,8 +348,8 @@ const Social = () => {
               </div>
             )}
             <div className="modal-actions">
-              <button onClick={() => setShowCreateModal(false)}>取消</button>
-              <button onClick={handleCreatePost}>发布</button>
+              <button type="button" onClick={() => setShowCreateModal(false)}>取消</button>
+              <button type="button" onClick={handleCreatePost}>发布</button>
             </div>
           </div>
         </div>
