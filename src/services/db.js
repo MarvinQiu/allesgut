@@ -35,6 +35,8 @@ const DB_SCHEMA = {
   }
 };
 
+const POSTS_STORE = STORES.POSTS;
+
 export const initDB = () => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -90,15 +92,7 @@ export const addPost = async (post) => {
   });
 };
 
-export const getPosts = async (options = {}) => {
-  const {
-    type = 'all',
-    page = 1,
-    limit = 10,
-    authorId = null,
-    status = 'published'
-  } = options;
-
+export const getPosts = async (type = 'all', page = 1) => {
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORES.POSTS], 'readonly');
@@ -106,24 +100,19 @@ export const getPosts = async (options = {}) => {
     const index = store.index('timestamp');
     
     const posts = [];
-    let skipCount = (page - 1) * limit;
+    let skipCount = (page - 1) * 10;
     let count = 0;
 
     index.openCursor(null, 'prev').onsuccess = (event) => {
       const cursor = event.target.result;
       
-      if (cursor && count < limit) {
+      if (cursor && count < 10) {
         const post = cursor.value;
-        
-        // 根据条件筛选帖子
-        const typeMatch = type === 'all' || post.type === type;
-        const authorMatch = !authorId || post.authorId === authorId;
-        const statusMatch = post.status === status;
         
         if (skipCount > 0) {
           skipCount--;
           cursor.continue();
-        } else if (typeMatch && authorMatch && statusMatch) {
+        } else if (type === 'all' || post.type === type) {
           posts.push(post);
           count++;
           cursor.continue();
@@ -131,12 +120,12 @@ export const getPosts = async (options = {}) => {
           cursor.continue();
         }
       } else {
-        resolve({
-          posts,
-          hasMore: cursor !== null,
-          total: posts.length + skipCount
-        });
+        resolve(posts);
       }
+    };
+
+    index.openCursor().onerror = () => {
+      reject(new Error('获取帖子失败'));
     };
   });
 };
@@ -184,5 +173,34 @@ export const addComment = async (postId, comment) => {
     };
     
     request.onerror = () => reject(request.error);
+  });
+};
+
+// 获取某个作者的全部帖子（按时间倒序）
+export const getPostsByAuthor = async (author) => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([POSTS_STORE], 'readonly');
+    const store = transaction.objectStore(POSTS_STORE);
+    const index = store.index('timestamp');
+
+    const posts = [];
+
+    index.openCursor(null, 'prev').onsuccess = (event) => {
+      const cursor = event.target.result;
+      if (cursor) {
+        const post = cursor.value;
+        if (post.author === author) {
+          posts.push(post);
+        }
+        cursor.continue();
+      } else {
+        resolve(posts);
+      }
+    };
+
+    index.openCursor().onerror = () => {
+      reject(new Error('获取用户帖子失败'));
+    };
   });
 };

@@ -23,6 +23,14 @@ const Social = () => {
   const [uploadingFiles, setUploadingFiles] = useState(0);
   const fileInputRef = useRef(null);
 
+  const getCurrentUser = () => {
+    const saved = JSON.parse(localStorage.getItem('profile_user') || 'null');
+    return saved || {
+      nickname: '当前用户',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+    };
+  };
+
   const handleFileSelect = async (event) => {
     const files = event.target.files;
     if (!files.length) return;
@@ -70,6 +78,7 @@ const Social = () => {
       setCurrentPage(page);
     } catch (error) {
       console.error('加载帖子失败:', error);
+      // 可以添加错误提示UI
     } finally {
       setLoading(false);
     }
@@ -90,10 +99,11 @@ const Social = () => {
   // 处理评论
   const handleComment = async (postId, comment) => {
     try {
+      const currentUser = getCurrentUser();
       const updatedPost = await addComment(postId, {
         content: comment,
-        author: '当前用户',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+        author: currentUser.nickname || '当前用户',
+        avatar: currentUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
       });
       setPosts(prev => prev.map(post => 
         post.id === postId ? updatedPost : post
@@ -106,10 +116,11 @@ const Social = () => {
   // 创建新帖子
   const handleCreatePost = async () => {
     try {
+      const currentUser = getCurrentUser();
       const post = {
         ...newPost,
-        author: '当前用户',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+        author: currentUser.nickname || '当前用户',
+        avatar: currentUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
       };
       await addPost(post);
       setShowCreateModal(false);
@@ -132,6 +143,19 @@ const Social = () => {
           发布动态
         </button>
       </div>
+
+      {loading && (
+        <div className="loading">
+          <FontAwesomeIcon icon={faSpinner} spin />
+          <span>加载中...</span>
+        </div>
+      )}
+
+      {!loading && posts.length === 0 && (
+        <div className="empty-state">
+          <p>暂无动态，快来发布第一条吧！</p>
+        </div>
+      )}
 
       <div className="posts-container">
         {posts.map(post => (
@@ -212,22 +236,16 @@ const Social = () => {
             </div>
           </div>
         ))}
-        
-        {loading && (
-          <div className="loading">
-            加载中...
-          </div>
-        )}
-        
-        {!loading && hasMore && (
-          <button 
-            className="load-more-btn"
-            onClick={() => loadPosts(currentPage + 1)}
-          >
-            加载更多
-          </button>
-        )}
       </div>
+
+      {hasMore && !loading && (
+        <button 
+          className="load-more-btn"
+          onClick={() => loadPosts(currentPage + 1)}
+        >
+          加载更多
+        </button>
+      )}
 
       {showCreateModal && (
         <div className="create-post-modal">
