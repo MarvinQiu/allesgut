@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="特殊关爱 - 专为特殊需求儿童家庭提供的信息分享交流平台">
+    <meta name="keywords" content="特殊儿童,自闭症,视障,听障,感统训练,康复,家长交流">
+    <meta name="author" content="特殊关爱团队">
+    
+    <!-- PWA相关 -->
+    <meta name="theme-color" content="#ed7d47">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="特殊关爱">
+    
+    <!-- 图标 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💝</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💝</text></svg>">
+    
+    <title>特殊关爱 - 信息分享交流平台</title>
+    
+    <!-- 外部资源 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <link rel="preconnect" href="https://api.specialcare.com">
+    
+    <style>
+        /* 加载动画 */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 1s infinite;
+        }
+        
+        .loading-text {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 防止页面闪烁 */
+        #root {
+            min-height: 100vh;
+            background-color: #fafafa;
+        }
+        
+        /* 错误页面样式 */
+        .error-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+            background-color: #fafafa;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            color: #ef4444;
+            margin-bottom: 1rem;
+        }
+        
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .error-message {
+            color: #6b7280;
+            margin-bottom: 2rem;
+        }
+        
+        .error-button {
+            background-color: #ed7d47;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .error-button:hover {
+            background-color: #de6332;
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载屏幕 -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-logo">💝</div>
+        <div class="loading-text">特殊关爱</div>
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- 应用根节点 -->
+    <div id="root"></div>
+    
+    <!-- 错误回退页面 -->
+    <div id="error-fallback" class="error-page" style="display: none;">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h1 class="error-title">应用加载失败</h1>
+        <p class="error-message">抱歉，应用遇到了一些问题。请刷新页面重试。</p>
+        <button class="error-button" onclick="window.location.reload()">
+            <i class="fas fa-redo mr-2"></i>
+            刷新页面
+        </button>
+    </div>
+    
+    <script>
+        // 全局错误处理
+        window.addEventListener('error', function(event) {
+            console.error('Global error:', event.error);
+            showErrorFallback();
+        });
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            showErrorFallback();
+        });
+        
+        function showErrorFallback() {
+            const loadingScreen = document.getElementById('loading-screen');
+            const errorFallback = document.getElementById('error-fallback');
+            const root = document.getElementById('root');
+            
+            if (loadingScreen) loadingScreen.style.display = 'none';
+            if (root) root.style.display = 'none';
+            if (errorFallback) errorFallback.style.display = 'flex';
+        }
+        
+        // 应用加载完成后隐藏加载屏幕
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('fade-out');
+                    setTimeout(function() {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+            }, 1000); // 最少显示1秒加载屏幕
+        });
+        
+        // 检测React应用是否成功挂载
+        setTimeout(function() {
+            const root = document.getElementById('root');
+            if (!root || !root.children.length) {
+                showErrorFallback();
+            }
+        }, 5000); // 5秒后检查应用是否加载成功
+        
+        // 用户配置信息（模拟）
+        window.ONEDAY_CONFIG = {
+            user: {
+                workid: 'demo001',
+                name: '演示用户',
+                headImg: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
+            }
+        };
+    </script>
+</body>
+</html>
