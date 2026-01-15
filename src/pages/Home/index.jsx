@@ -3,6 +3,7 @@ import SearchBar from '../../components/SearchBar';
 import TagFilter from '../../components/TagFilter';
 import PostCard from '../../components/PostCard';
 import PostDetail from '../../components/PostDetail';
+import { postsService } from '../../services/posts';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,6 +12,8 @@ const Home = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [feedType, setFeedType] = useState('recommended'); // 'recommended' | 'following'
+  const [tags, setTags] = useState([]);
 
   // 控制底部导航栏显示/隐藏
   useEffect(() => {
@@ -23,39 +26,6 @@ const Home = () => {
       }
     }
   }, [selectedPost]);
-
-  // API配置
-  const API_BASE_URL = 'https://api.specialcare.com'; // 替换为实际的API地址
-  
-  // 获取推荐内容的API
-  const fetchRecommendedPosts = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/posts/recommended`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // 如果需要认证，可以添加Authorization头
-          // 'Authorization': `Bearer ${token}`
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // API返回数据格式验证
-      if (data.success && Array.isArray(data.data)) {
-        return data.data;
-      } else {
-        throw new Error('Invalid API response format');
-      }
-    } catch (error) {
-      console.error('Failed to fetch recommended posts:', error);
-      throw error;
-    }
-  };
 
   // 静态兜底数据
   const fallbackPosts = [
@@ -122,55 +92,60 @@ const Home = () => {
     }
   ];
 
-  // 加载推荐内容
+  // 加载标签
   useEffect(() => {
-    const loadPosts = async () => {
-      setLoading(true);
-      setError(null);
-      
+    const loadTags = async () => {
       try {
-        // 尝试从API获取数据
-        const apiPosts = await fetchRecommendedPosts();
-        setPosts(apiPosts);
+        const apiTags = await postsService.getTags();
+        setTags(apiTags.map(t => t.name));
       } catch (error) {
-        console.warn('API获取失败，使用兜底数据:', error.message);
-        // API失败时使用静态兜底数据
-        setPosts(fallbackPosts);
-        setError('使用离线数据');
-      } finally {
-        setLoading(false);
+        // Fallback to hardcoded tags
+        setTags(['感统训练', '自闭症', '视障', '营养搭配', '教育', '日常护理']);
       }
     };
-
-    loadPosts();
+    loadTags();
   }, []);
 
-  // 刷新数据的方法
-  const refreshPosts = async () => {
+  // 加载帖子
+  const loadPosts = async () => {
     setLoading(true);
+    setError(null);
+
     try {
-      const apiPosts = await fetchRecommendedPosts();
-      setPosts(apiPosts);
-      setError(null);
+      const result = await postsService.getPosts({
+        feed_type: feedType,
+        search: searchQuery || undefined,
+        tag: selectedTags[0] || undefined, // API takes single tag
+        page: 1,
+      });
+      setPosts(result.posts || []);
     } catch (error) {
-      console.warn('刷新失败，保持当前数据:', error.message);
-      setError('刷新失败');
+      console.error('Failed to fetch posts:', error);
+      setPosts(fallbackPosts); // Keep fallback for offline
+      setError('使用离线数据');
     } finally {
       setLoading(false);
     }
   };
 
-  const tags = ['感统训练', '自闭症', '视障', '营养搭配', '教育', '日常护理', '行为训练', '康复治疗'];
+  useEffect(() => {
+    loadPosts();
+  }, [feedType, searchQuery, selectedTags]);
 
-  // 过滤帖子
+  // 刷新数据的方法
+  const refreshPosts = async () => {
+    await loadPosts();
+  };
+
+  // 过滤帖子 (client-side filtering for fallback data)
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.content.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesTags = selectedTags.length === 0 || 
+
+    const matchesTags = selectedTags.length === 0 ||
       selectedTags.some(tag => post.tags && post.tags.includes(tag));
-    
+
     return matchesSearch && matchesTags;
   });
 
@@ -179,15 +154,39 @@ const Home = () => {
       {/* 顶部搜索栏 */}
       <div className="sticky top-0 bg-white z-40 shadow-sm">
         <div className="px-4 py-3">
-          <SearchBar 
+          <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="搜索相关内容..."
           />
         </div>
-        
+
+        {/* Feed Tabs */}
+        <div className="flex border-b border-gray-200">
+          <button
+            className={`flex-1 py-3 text-center font-medium ${
+              feedType === 'recommended'
+                ? 'text-primary-500 border-b-2 border-primary-500'
+                : 'text-gray-500'
+            }`}
+            onClick={() => setFeedType('recommended')}
+          >
+            推荐
+          </button>
+          <button
+            className={`flex-1 py-3 text-center font-medium ${
+              feedType === 'following'
+                ? 'text-primary-500 border-b-2 border-primary-500'
+                : 'text-gray-500'
+            }`}
+            onClick={() => setFeedType('following')}
+          >
+            关注
+          </button>
+        </div>
+
         {/* 标签筛选 */}
-        <TagFilter 
+        <TagFilter
           tags={tags}
           selectedTags={selectedTags}
           onTagChange={setSelectedTags}
@@ -202,7 +201,7 @@ const Home = () => {
               <i className="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>
               <span className="text-yellow-700 text-sm">{error}</span>
             </div>
-            <button 
+            <button
               onClick={refreshPosts}
               className="text-yellow-600 hover:text-yellow-800 text-sm font-medium"
               disabled={loading}
@@ -229,8 +228,8 @@ const Home = () => {
           {filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
               <div key={post.id} className="waterfall-item">
-                <PostCard 
-                  post={post} 
+                <PostCard
+                  post={post}
                   onClick={setSelectedPost}
                 />
               </div>
@@ -246,8 +245,8 @@ const Home = () => {
 
       {/* 卡片详情弹窗 */}
       {selectedPost && (
-        <PostDetail 
-          post={selectedPost} 
+        <PostDetail
+          post={selectedPost}
           onClose={() => setSelectedPost(null)}
         />
       )}
