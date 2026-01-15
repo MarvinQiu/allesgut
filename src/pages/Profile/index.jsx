@@ -1,89 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { usersService } from '../../services/users';
 import UserInfo from '../../components/UserInfo';
 import TabNavigation from '../../components/TabNavigation';
 import UserPostGrid from '../../components/PostGrid';
-import OrderList from '../../components/OrderList';
 
 const Profile = () => {
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('posts');
+  const [posts, setPosts] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const tabs = [
     { id: 'posts', label: '我的发布', icon: 'fas fa-edit' },
-    { id: 'favorites', label: '我的收藏', icon: 'fas fa-heart' },
-    { id: 'orders', label: '我的订单', icon: 'fas fa-shopping-bag' }
+    { id: 'favorites', label: '我的收藏', icon: 'fas fa-heart' }
   ];
 
-  const mockUserInfo = {
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face',
-    nickname: '小雨妈妈',
-    bio: '自闭症儿童家长，分享康复训练经验',
-    postsCount: 23,
-    followersCount: 1200,
-    followingCount: 89
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        if (activeTab === 'posts') {
+          const result = await usersService.getUserPosts(user.id);
+          setPosts(result.posts || []);
+        } else if (activeTab === 'favorites') {
+          const result = await usersService.getMyFavorites();
+          setFavorites(result.posts || []);
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [activeTab, user]);
+
+  const userInfo = {
+    avatar: user?.avatar_url || 'https://via.placeholder.com/200',
+    nickname: user?.nickname || '用户',
+    bio: user?.bio || '',
+    postsCount: user?.posts_count || 0,
+    followersCount: user?.followers_count || 0,
+    followingCount: user?.following_count || 0
   };
 
-  const mockPosts = [
-    {
-      id: 1,
-      image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=200&h=200&fit=crop',
-      title: '感统训练小技巧',
-      likes: 128
-    },
-    {
-      id: 2,
-      image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=200&h=200&fit=crop',
-      title: '日常作息建立',
-      likes: 203
-    }
-  ];
-
-  const mockOrders = [
-    {
-      id: 'ORD001',
-      status: 'delivered',
-      statusText: '已完成',
-      date: '2024-01-15',
-      total: 168,
-      items: [
-        {
-          name: '感统训练平衡板',
-          image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100&h=100&fit=crop',
-          price: 168,
-          quantity: 1
-        }
-      ]
-    },
-    {
-      id: 'ORD002',
-      status: 'shipping',
-      statusText: '配送中',
-      date: '2024-01-18',
-      total: 217,
-      items: [
-        {
-          name: '盲文学习板套装',
-          image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=100&h=100&fit=crop',
-          price: 89,
-          quantity: 1
-        },
-        {
-          name: '儿童专用营养补充剂',
-          image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=100&h=100&fit=crop',
-          price: 128,
-          quantity: 1
-        }
-      ]
-    }
-  ];
-
   const renderTabContent = () => {
+    if (loading) {
+      return (
+        <div className="flex justify-center py-8">
+          <i className="fas fa-spinner fa-spin text-gray-400"></i>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'posts':
-        return <UserPostGrid posts={mockPosts} />;
+        return <UserPostGrid posts={posts} emptyMessage="还没有发布内容" />;
       case 'favorites':
-        return <UserPostGrid posts={mockPosts} />;
-      case 'orders':
-        return <OrderList orders={mockOrders} />;
+        return <UserPostGrid posts={favorites} emptyMessage="还没有收藏内容" />;
       default:
         return null;
     }
@@ -92,15 +69,25 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 用户信息区域 */}
-      <UserInfo userInfo={mockUserInfo} />
-      
+      <UserInfo userInfo={userInfo} />
+
+      {/* 退出登录按钮 */}
+      <div className="flex justify-end px-4 -mt-2 mb-2">
+        <button
+          onClick={logout}
+          className="px-4 py-2 text-gray-500 text-sm"
+        >
+          退出登录
+        </button>
+      </div>
+
       {/* 标签导航 */}
-      <TabNavigation 
+      <TabNavigation
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
-      
+
       {/* 内容区域 */}
       <div className="px-4 py-4">
         {renderTabContent()}

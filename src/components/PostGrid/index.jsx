@@ -1,13 +1,22 @@
 import React from 'react';
 
-const UserPostGrid = ({ posts }) => {
+const UserPostGrid = ({ posts, emptyMessage = '暂无内容' }) => {
+  if (!posts || posts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+        <i className="fas fa-inbox text-4xl mb-3"></i>
+        <p className="text-sm">{emptyMessage}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3">
       {posts.map((post) => (
         <div key={post.id} className="bg-white rounded-xl overflow-hidden card-shadow">
           <div className="aspect-square">
-            <img 
-              src={post.image} 
+            <img
+              src={post.image}
               alt={post.title}
               className="w-full h-full object-cover"
             />
