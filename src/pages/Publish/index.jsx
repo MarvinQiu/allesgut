@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { postsService } from '../../services/posts';
+import { uploadService } from '../../services/upload';
 
 const Publish = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
-    content: '',
-    tags: [],
-    images: []
+    content: ''
   });
   const [selectedTags, setSelectedTags] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]); // actual File objects
+  const [imagePreviews, setImagePreviews] = useState([]); // preview URLs
+  const [tags, setTags] = useState([]); // from API
 
-  const availableTags = [
-    '感统训练', '自闭症', '视障', '听障', '营养搭配', 
-    '教育', '日常护理', '行为训练', '康复治疗', '心理健康'
-  ];
+  // Fetch tags from API
+  useEffect(() => {
+    const loadTags = async () => {
+      try {
+        const apiTags = await postsService.getTags();
+        setTags(apiTags.map(t => t.name));
+      } catch (error) {
+        // Fallback to hardcoded tags
+        setTags(['感统训练', '自闭症', '视障', '听障', '营养搭配', '教育', '日常护理']);
+      }
+    };
+    loadTags();
+  }, []);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -37,8 +49,24 @@ const Publish = () => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    // 这里可以添加图片上传逻辑
-    console.log('选择的图片:', files);
+    const totalImages = imageFiles.length + files.length;
+
+    if (totalImages > 9) {
+      alert('最多只能上传9张图片');
+      return;
+    }
+
+    // Create preview URLs
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+
+    setImageFiles(prev => [...prev, ...files]);
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeImage = (index) => {
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -48,15 +76,27 @@ const Publish = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      // 模拟发布请求
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // 发布成功后返回首页
+      // Upload images first
+      let imageUrls = [];
+      if (imageFiles.length > 0) {
+        imageUrls = await uploadService.uploadImages(imageFiles);
+      }
+
+      // Create the post
+      await postsService.createPost({
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        tags: selectedTags,
+        media_urls: imageUrls,
+        media_type: 'image'
+      });
+
       alert('发布成功！');
       navigate('/');
     } catch (error) {
+      console.error('Failed to publish:', error);
       alert('发布失败，请重试');
     } finally {
       setIsSubmitting(false);
@@ -68,14 +108,14 @@ const Publish = () => {
       {/* 顶部导航栏 */}
       <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
         <div className="flex items-center justify-between p-4">
-          <button 
+          <button
             onClick={() => navigate('/')}
             className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"
           >
             <i className="fas fa-arrow-left"></i>
           </button>
           <span className="font-medium text-gray-900">发布内容</span>
-          <button 
+          <button
             onClick={handleSubmit}
             disabled={isSubmitting || !formData.title.trim() || !formData.content.trim()}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -125,21 +165,38 @@ const Publish = () => {
         {/* 图片上传 */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">添加图片</label>
-          <div className="flex items-center space-x-3">
-            <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer hover:border-primary-500 transition-colors">
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <i className="fas fa-plus text-gray-400 text-xl"></i>
-            </label>
-            <div className="text-gray-500 text-sm">
-              <p>最多可上传9张图片</p>
-              <p>支持JPG、PNG格式</p>
-            </div>
+          <div className="text-gray-500 text-sm mb-3">
+            <p>最多可上传9张图片，支持JPG、PNG格式</p>
+          </div>
+          {/* Show image previews */}
+          <div className="flex flex-wrap gap-2">
+            {imagePreviews.map((preview, index) => (
+              <div key={index} className="relative w-20 h-20">
+                <img
+                  src={preview}
+                  alt={`Preview ${index + 1}`}
+                  className="w-full h-full object-cover rounded-xl"
+                />
+                <button
+                  onClick={() => removeImage(index)}
+                  className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            ))}
+            {imagePreviews.length < 9 && (
+              <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer hover:border-primary-500 transition-colors">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <i className="fas fa-plus text-gray-400 text-xl"></i>
+              </label>
+            )}
           </div>
         </div>
 
@@ -149,7 +206,7 @@ const Publish = () => {
             选择标签 ({selectedTags.length}/5)
           </label>
           <div className="flex flex-wrap gap-2">
-            {availableTags.map((tag) => {
+            {tags.map((tag) => {
               const isSelected = selectedTags.includes(tag);
               return (
                 <button
