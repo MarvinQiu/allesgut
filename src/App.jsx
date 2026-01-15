@@ -7,6 +7,7 @@ import Mall from './pages/Mall';
 import Profile from './pages/Profile';
 import Publish from './pages/Publish';
 import Login from './pages/Login';
+import Notifications from './pages/Notifications';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -65,6 +66,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Publish />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           }
         />
