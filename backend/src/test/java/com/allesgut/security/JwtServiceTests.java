@@ -80,4 +80,36 @@ class JwtServiceTests {
         // Then
         assertThat(isValid).isFalse();
     }
+
+    @Test
+    void shouldReturnFalseForExpiredToken() throws InterruptedException {
+        // Given
+        JwtProperties shortExpiryProperties = new JwtProperties();
+        shortExpiryProperties.setSecret("testSecretKeyThatIsLongEnoughForHS256AlgorithmRequirement");
+        shortExpiryProperties.setExpiration(1L); // 1 millisecond
+        JwtService shortExpiryJwtService = new JwtService(shortExpiryProperties);
+
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .phone("13800138000")
+                .nickname("Test User")
+                .build();
+        String token = shortExpiryJwtService.generateToken(user);
+
+        // When
+        Thread.sleep(10); // Wait for token to expire
+        boolean isValid = shortExpiryJwtService.validateToken(token);
+
+        // Then
+        assertThat(isValid).isFalse();
+    }
+
+    @Test
+    void shouldReturnFalseForNullToken() {
+        // When
+        boolean isValid = jwtService.validateToken(null);
+
+        // Then
+        assertThat(isValid).isFalse();
+    }
 }

@@ -3,6 +3,7 @@ package com.allesgut.security;
 import com.allesgut.config.JwtProperties;
 import com.allesgut.entity.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +28,6 @@ public class JwtService {
 
         return Jwts.builder()
                 .subject(user.getId().toString())
-                .claim("phone", user.getPhone())
-                .claim("nickname", user.getNickname())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -41,10 +40,13 @@ public class JwtService {
     }
 
     public boolean validateToken(String token) {
+        if (token == null) {
+            return false;
+        }
         try {
             extractClaims(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException e) {
             log.debug("Invalid JWT token: {}", e.getMessage());
             return false;
         }
