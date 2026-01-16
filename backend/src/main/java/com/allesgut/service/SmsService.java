@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
 @Service
@@ -21,7 +21,6 @@ public class SmsService {
     private static final int CODE_EXPIRATION_MINUTES = 5;
 
     private final SmsVerificationCodeRepository smsRepository;
-    private final Random random = new Random();
 
     @Transactional
     public String sendVerificationCode(String phone) {
@@ -31,7 +30,7 @@ public class SmsService {
         }
 
         // Generate 6-digit code
-        String code = String.format("%06d", random.nextInt(1000000));
+        String code = String.format("%06d", ThreadLocalRandom.current().nextInt(1000000));
 
         // Save to database
         SmsVerificationCode smsCode = SmsVerificationCode.builder()

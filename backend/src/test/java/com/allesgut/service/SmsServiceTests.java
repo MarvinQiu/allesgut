@@ -97,4 +97,42 @@ class SmsServiceTests {
         // Then
         assertThat(result).isFalse();
     }
+
+    @Test
+    void shouldFailVerificationForAlreadyUsedCode() {
+        // Given
+        String phone = "13800138000";
+        String code = "123456";
+        SmsVerificationCode smsCode = SmsVerificationCode.builder()
+                .phone(phone)
+                .code(code)
+                .expiresAt(LocalDateTime.now().plusMinutes(5))
+                .used(true)
+                .build();
+
+        when(smsRepository.findTopByPhoneAndCodeOrderByCreatedAtDesc(phone, code))
+                .thenReturn(java.util.Optional.of(smsCode));
+
+        // When
+        boolean result = smsService.verifyCode(phone, code);
+
+        // Then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void shouldFailVerificationForNonExistentCode() {
+        // Given
+        String phone = "13800138000";
+        String code = "123456";
+
+        when(smsRepository.findTopByPhoneAndCodeOrderByCreatedAtDesc(phone, code))
+                .thenReturn(java.util.Optional.empty());
+
+        // When
+        boolean result = smsService.verifyCode(phone, code);
+
+        // Then
+        assertThat(result).isFalse();
+    }
 }
