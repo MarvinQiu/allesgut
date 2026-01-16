@@ -8,6 +8,7 @@ import com.allesgut.repository.UserRepository;
 import com.allesgut.repository.UserSessionRepository;
 import com.allesgut.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +32,22 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid or expired verification code");
         }
 
-        // Find or create user
-        User user = userRepository.findByPhone(phone)
-                .orElseGet(() -> createNewUser(phone));
+        // Find or create user with race condition handling
+        User user;
+        try {
+            user = userRepository.findByPhone(phone)
+                    .orElseGet(() -> createNewUser(phone));
+        } catch (DataIntegrityViolationException e) {
+            // Race condition: another thread created the user, fetch it
+            user = userRepository.findByPhone(phone)
+                    .orElseThrow(() -> new IllegalStateException("Failed to create or find user"));
+        }
 
         // Generate JWT token
         String token = jwtService.generateToken(user);
+
+        // Invalidate old sessions for security
+        sessionRepository.deleteByUserId(user.getId());
 
         // Save session
         UserSession session = UserSession.builder()
@@ -60,10 +71,17 @@ public class AuthService {
         return userRepository.save(newUser);
     }
 
+    private String maskPhone(String phone) {
+        if (phone == null || phone.length() < 7) {
+            return phone;
+        }
+        return phone.substring(0, 3) + "****" + phone.substring(7);
+    }
+
     private UserDto mapToDto(User user) {
         return new UserDto(
                 user.getId(),
-                user.getPhone(),
+                maskPhone(user.getPhone()),
                 user.getNickname(),
                 user.getAvatarUrl(),
                 user.getBio(),
