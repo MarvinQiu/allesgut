@@ -28,6 +28,8 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
 
+# WARNING: Change JWT secret in production! The default value is insecure.
+# Set JWT_SECRET environment variable with a strong random string.
 jwt:
   secret: ${JWT_SECRET:defaultSecretKeyForDevelopmentOnly}
   expiration: 2592000000  # 30 days in ms
