@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: allesgut-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/allesgut
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+jwt:
+  secret: ${JWT_SECRET:defaultSecretKeyForDevelopmentOnly}
+  expiration: 2592000000  # 30 days in ms
+
+aliyun:
+  oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:https://oss-cn-hangzhou.aliyuncs.com}
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID}
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET}
+    bucket-name: ${ALIYUN_OSS_BUCKET:allesgut-media}
+
+logging:
+  level:
+    root: INFO
+    com.allesgut: DEBUG
