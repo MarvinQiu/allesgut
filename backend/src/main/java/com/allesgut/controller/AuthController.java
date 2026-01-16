@@ -17,11 +17,7 @@ public class AuthController {
 
     @PostMapping("/sms/send")
     public ResponseEntity<ApiResponse<Void>> sendSms(@Valid @RequestBody SendSmsRequest request) {
-        try {
-            smsService.sendVerificationCode(request.phone());
-            return ResponseEntity.ok(ApiResponse.success("验证码已发送"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        smsService.sendVerificationCode(request.phone());
+        return ResponseEntity.ok(ApiResponse.success("验证码已发送"));
     }
 }

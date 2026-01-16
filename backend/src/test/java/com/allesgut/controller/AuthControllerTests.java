@@ -58,4 +58,18 @@ class AuthControllerTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
+
+    @Test
+    void shouldRejectInvalidPhoneFormat() throws Exception {
+        // Given - invalid phone that won't pass @Pattern validation
+        SendSmsRequest request = new SendSmsRequest("123");
+
+        // When/Then - validation should reject before service is called
+        mockMvc.perform(post("/api/auth/sms/send")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Validation failed"));
+    }
 }
