@@ -50,8 +50,8 @@ const Profile = () => {
   const renderTabContent = () => {
     if (loading) {
       return (
-        <div className="flex justify-center py-8">
-          <i className="fas fa-spinner fa-spin text-gray-400"></i>
+        <div className="flex justify-center py-12">
+          <div className="w-10 h-10 border-3 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
         </div>
       );
     }
@@ -67,31 +67,31 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 用户信息区域 */}
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50/30 font-body">
+      {/* User info section */}
       <UserInfo userInfo={userInfo} />
 
-      {/* 退出登录按钮 */}
+      {/* Logout button */}
       <div className="flex justify-end px-4 -mt-2 mb-2">
         <button
           onClick={logout}
-          className="px-4 py-2 text-gray-500 text-sm"
+          className="px-4 py-2 text-primary-500 text-sm font-medium hover:text-primary-700 transition-colors duration-200 cursor-pointer"
         >
           退出登录
         </button>
       </div>
 
-      {/* 标签导航 */}
+      {/* Tab navigation */}
       <TabNavigation
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
 
-      {/* 内容区域 */}
-      <div className="px-4 py-4">
+      {/* Content area */}
+      <main className="px-4 py-4 pb-24">
         {renderTabContent()}
-      </div>
+      </main>
     </div>
   );
 };

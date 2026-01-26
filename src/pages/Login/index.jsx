@@ -85,101 +85,143 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50/30 flex flex-col font-body">
+      {/* Header */}
+      <header className="sticky top-0 glass border-b border-primary-100/50 z-10">
         <div className="flex items-center justify-between p-4">
           {step === 'code' ? (
             <button
               onClick={handleBack}
-              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"
+              className="w-10 h-10 rounded-xl bg-primary-100/80 flex items-center justify-center text-primary-700 hover:bg-primary-200/80 transition-colors duration-200 cursor-pointer"
+              aria-label="返回"
             >
-              <i className="fas fa-arrow-left"></i>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
           ) : (
-            <div className="w-8" />
+            <div className="w-10" />
           )}
-          <span className="font-medium text-gray-900">
+          <h1 className="font-semibold text-primary-900 font-heading">
             {step === 'phone' ? '手机登录' : '输入验证码'}
-          </span>
-          <div className="w-8" />
+          </h1>
+          <div className="w-10" />
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 p-6">
-        <div className="text-center mb-8 mt-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">AllesGut</h1>
-          <p className="text-gray-500">特需儿童家长社区</p>
+      {/* Main content */}
+      <main className="flex-1 p-6">
+        {/* Logo and tagline */}
+        <div className="text-center mb-10 mt-8">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-3xl gradient-bg flex items-center justify-center shadow-soft-lg">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-primary-900 mb-2 font-heading">AllesGut</h2>
+          <p className="text-primary-600">特需儿童家长社区</p>
         </div>
 
+        {/* Error message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-red-600 text-sm text-center">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl animate-fade-in" role="alert">
+            <p className="text-red-700 text-sm text-center font-medium">{error}</p>
           </div>
         )}
 
         {step === 'phone' ? (
           <div className="space-y-6">
             <div>
-              <label className="block text-gray-700 font-medium mb-2">手机号码</label>
+              <label htmlFor="phone" className="block text-primary-800 font-medium mb-2">
+                手机号码
+              </label>
               <input
+                id="phone"
                 type="tel"
+                inputMode="numeric"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
                 placeholder="请输入手机号码"
-                className="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-4 input-soft text-lg text-primary-900 placeholder-primary-400 font-body"
                 maxLength={11}
+                autoComplete="tel"
               />
             </div>
 
             <button
               onClick={handleSendCode}
               disabled={isLoading || phone.length !== 11}
-              className={`w-full py-4 rounded-xl text-lg font-medium transition-colors ${
+              className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all duration-200 cursor-pointer ${
                 isLoading || phone.length !== 11
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-primary-500 text-white hover:bg-primary-600'
+                  : 'btn-primary'
               }`}
             >
-              {isLoading ? '发送中...' : '获取验证码'}
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  发送中...
+                </span>
+              ) : (
+                '获取验证码'
+              )}
             </button>
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="text-center mb-4">
-              <p className="text-gray-600">验证码已发送至</p>
-              <p className="text-gray-900 font-medium">{phone}</p>
+            <div className="text-center mb-6">
+              <p className="text-primary-600">验证码已发送至</p>
+              <p className="text-primary-900 font-semibold text-lg">{phone}</p>
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">验证码</label>
+              <label htmlFor="code" className="block text-primary-800 font-medium mb-2">
+                验证码
+              </label>
               <input
+                id="code"
                 type="text"
+                inputMode="numeric"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="请输入6位验证码"
-                className="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl text-lg text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-4 input-soft text-xl text-center tracking-[0.5em] text-primary-900 placeholder-primary-400 font-body"
                 maxLength={6}
+                autoComplete="one-time-code"
               />
             </div>
 
             <button
               onClick={handleVerifyCode}
               disabled={isLoading || code.length !== 6}
-              className={`w-full py-4 rounded-xl text-lg font-medium transition-colors ${
+              className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all duration-200 cursor-pointer ${
                 isLoading || code.length !== 6
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-primary-500 text-white hover:bg-primary-600'
+                  : 'btn-primary'
               }`}
             >
-              {isLoading ? '验证中...' : '登录'}
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  验证中...
+                </span>
+              ) : (
+                '登录'
+              )}
             </button>
 
             <div className="text-center">
               <button
                 onClick={handleResendCode}
                 disabled={countdown > 0}
-                className={`text-sm ${
-                  countdown > 0 ? 'text-gray-400' : 'text-primary-500'
+                className={`text-sm font-medium cursor-pointer ${
+                  countdown > 0 ? 'text-primary-400' : 'text-primary-600 hover:text-primary-700'
                 }`}
               >
                 {countdown > 0 ? `重新发送 (${countdown}s)` : '重新发送验证码'}
@@ -188,10 +230,10 @@ const Login = () => {
           </div>
         )}
 
-        <p className="text-center text-gray-400 text-xs mt-8">
+        <p className="text-center text-primary-400 text-xs mt-10">
           登录即表示同意《用户协议》和《隐私政策》
         </p>
-      </div>
+      </main>
     </div>
   );
 };
