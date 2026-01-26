@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/allesgut
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD:Putongmima}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -22,11 +22,11 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 100MB
 
 # WARNING: Change JWT secret in production! The default value is insecure.
 # Set JWT_SECRET environment variable with a strong random string.
@@ -37,8 +37,8 @@ jwt:
 aliyun:
   oss:
     endpoint: ${ALIYUN_OSS_ENDPOINT:https://oss-cn-hangzhou.aliyuncs.com}
-    access-key-id: ${ALIYUN_ACCESS_KEY_ID}
-    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET}
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
     bucket-name: ${ALIYUN_OSS_BUCKET:allesgut-media}
 
 logging:

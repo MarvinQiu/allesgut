@@ -78,6 +78,13 @@ public class AuthService {
         return phone.substring(0, 3) + "****" + phone.substring(7);
     }
 
+    @Transactional
+    public void logout(String token) {
+        // For JWT-based auth, we invalidate the session
+        // The token itself remains valid until expiry, but we remove it from our session store
+        sessionRepository.deleteByToken(token);
+    }
+
     private UserDto mapToDto(User user) {
         return new UserDto(
                 user.getId(),

@@ -18,7 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -47,7 +49,8 @@ class AuthControllerTests {
         // When/Then
         mockMvc.perform(post("/api/auth/sms/send")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request))
+)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("验证码已发送"));
@@ -63,7 +66,8 @@ class AuthControllerTests {
         // When/Then
         mockMvc.perform(post("/api/auth/sms/send")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request))
+)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -76,7 +80,8 @@ class AuthControllerTests {
         // When/Then - validation should reject before service is called
         mockMvc.perform(post("/api/auth/sms/send")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request))
+)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Validation failed"));
@@ -94,7 +99,8 @@ class AuthControllerTests {
         // When/Then
         mockMvc.perform(post("/api/auth/sms/verify")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request))
+)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.token").value("jwt-token-here"))
@@ -112,8 +118,22 @@ class AuthControllerTests {
         // When/Then
         mockMvc.perform(post("/api/auth/sms/verify")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request))
+)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void shouldLogoutSuccessfully() throws Exception {
+        // Given
+        doNothing().when(authService).logout(anyString());
+
+        // When/Then
+        mockMvc.perform(post("/api/auth/logout")
+                        .with(user("test-user-id"))
+                        .header("Authorization", "Bearer test-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 }
