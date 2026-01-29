@@ -7,59 +7,47 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Caring teal palette - warm and accessible for wellness/community
+        // Brand color - modern purple-blue for social media vibe
+        brand: {
+          50: '#F5F3FF',
+          100: '#E8E6FF',
+          200: '#D1CCFF',
+          300: '#B3ABFF',
+          400: '#8E7FFF',
+          500: '#5B4FFF',
+          600: '#4A3FE5',
+          700: '#3930CC',
+          800: '#2B24A3',
+          900: '#1F1A7A',
+        },
+        // Keep primary as gray scale for backward compatibility
         primary: {
-          50: '#F0FDFA',
-          100: '#CCFBF1',
-          200: '#99F6E4',
-          300: '#5EEAD4',
-          400: '#2DD4BF',
-          500: '#14B8A6',
-          600: '#0D9488',
-          700: '#0F766E',
-          800: '#115E59',
-          900: '#134E4A',
+          50: '#FAFAFA',
+          100: '#F5F5F5',
+          200: '#E5E5E5',
+          300: '#D4D4D4',
+          400: '#A3A3A3',
+          500: '#737373',
+          600: '#525252',
+          700: '#404040',
+          800: '#262626',
+          900: '#171717',
         },
-        // Warm orange for CTAs - friendly and approachable
-        secondary: {
-          50: '#FFF7ED',
-          100: '#FFEDD5',
-          200: '#FED7AA',
-          300: '#FDBA74',
-          400: '#FB923C',
-          500: '#F97316',
-          600: '#EA580C',
-          700: '#C2410C',
-          800: '#9A3412',
-          900: '#7C2D12',
-        },
-        // Soft purple accent for special highlights
-        accent: {
-          50: '#FAF5FF',
-          100: '#F3E8FF',
-          200: '#E9D5FF',
-          300: '#D8B4FE',
-          400: '#C084FC',
-          500: '#A855F7',
-          600: '#9333EA',
-          700: '#7E22CE',
-          800: '#6B21A8',
-          900: '#581C87',
-        }
+        // Functional colors
+        like: '#FF2D55',
+        star: '#FFB84D',
+        info: '#4A90E2',
       },
       fontFamily: {
         sans: ['Nunito Sans', 'PingFang SC', 'Helvetica Neue', 'Arial', 'sans-serif'],
         heading: ['Varela Round', 'Nunito Sans', 'sans-serif'],
         body: ['Nunito Sans', 'PingFang SC', 'sans-serif'],
       },
-      // Soft UI shadows - subtle depth without harsh edges
+      // Minimal shadows for flat design
       boxShadow: {
-        'soft-sm': '0 2px 8px -2px rgba(13, 148, 136, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.04)',
-        'soft': '0 4px 16px -4px rgba(13, 148, 136, 0.12), 0 2px 4px -2px rgba(0, 0, 0, 0.04)',
-        'soft-md': '0 8px 24px -6px rgba(13, 148, 136, 0.15), 0 4px 8px -4px rgba(0, 0, 0, 0.04)',
-        'soft-lg': '0 12px 32px -8px rgba(13, 148, 136, 0.18), 0 6px 12px -6px rgba(0, 0, 0, 0.04)',
-        'soft-xl': '0 20px 48px -12px rgba(13, 148, 136, 0.22), 0 8px 16px -8px rgba(0, 0, 0, 0.04)',
-        'inner-soft': 'inset 0 2px 4px 0 rgba(13, 148, 136, 0.06)',
+        'card': '0 1px 3px rgba(0, 0, 0, 0.06)',
+        'card-hover': '0 2px 8px rgba(0, 0, 0, 0.1)',
+        'nav': '0 -1px 3px rgba(0, 0, 0, 0.04)',
       },
       spacing: {
         '18': '4.5rem',

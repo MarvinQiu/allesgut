@@ -1,13 +1,50 @@
 import api from './api';
 
+// Helper function to format time
+function formatTime(dateString) {
+  if (!dateString) return '';
+
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return '刚刚';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}分钟前`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}小时前`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}天前`;
+
+  return date.toLocaleDateString('zh-CN');
+}
+
 export const postsService = {
   async getPosts({ page = 1, limit = 20, feed_type = 'recommended', tag, search } = {}) {
-    const params = { page, limit, feed_type };
+    const params = { page: page - 1, limit, feedType: feed_type };
     if (tag) params.tag = tag;
     if (search) params.search = search;
 
     const response = await api.get('/posts', { params });
-    return response.data.data;
+    const result = response.data.data;
+
+    // Transform backend format to frontend format
+    if (result.data) {
+      result.data = result.data.map(post => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        author: post.author?.nickname || 'Unknown',
+        avatar: post.author?.avatarUrl || 'https://via.placeholder.com/100',
+        image: post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : null,
+        images: post.mediaUrls || [],
+        tags: post.tags || [],
+        likes: post.likesCount || 0,
+        comments: post.commentsCount || 0,
+        time: formatTime(post.createdAt),
+        // Keep original fields for detail view
+        _original: post
+      }));
+    }
+
+    return result;
   },
 
   async getPost(id) {

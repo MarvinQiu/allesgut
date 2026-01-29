@@ -10,8 +10,8 @@ const TagFilter = ({ tags, selectedTags, onTagChange }) => {
   };
 
   return (
-    <nav className="px-4 pb-4" aria-label="标签筛选">
-      <div className="flex flex-wrap gap-2" role="group">
+    <nav className="px-4 pb-3 overflow-x-auto scrollbar-hide" aria-label="标签筛选">
+      <div className="flex gap-2" role="group">
         {tags.map((tag) => {
           const isSelected = selectedTags.includes(tag);
           return (
@@ -19,11 +19,11 @@ const TagFilter = ({ tags, selectedTags, onTagChange }) => {
               key={tag}
               onClick={() => handleTagClick(tag)}
               aria-pressed={isSelected}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
+              className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
                 isSelected
-                  ? 'tag-soft active'
-                  : 'tag-soft hover:shadow-soft-sm'
-              } font-body`}
+                  ? 'bg-brand-500 text-white'
+                  : 'bg-primary-50 text-primary-600 hover:bg-primary-100'
+              }`}
             >
               {tag}
             </button>

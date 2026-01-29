@@ -134,42 +134,48 @@ const Home = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50/30 font-body">
+    <div className="min-h-screen bg-white">
       {/* Sticky header with search and filters */}
-      <header className="sticky top-0 glass z-40 shadow-soft-sm">
-        <div className="px-4 py-4">
+      <header className="sticky top-0 bg-white z-40 border-b border-primary-100">
+        <div className="px-4 pt-4 pb-3">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="搜索相关内容..."
+            placeholder="搜索内容或用户"
           />
         </div>
 
         {/* Feed type tabs */}
-        <div className="flex border-b border-primary-100/50" role="tablist">
+        <div className="flex" role="tablist">
           <button
             role="tab"
             aria-selected={feedType === 'recommended'}
-            className={`flex-1 py-3.5 text-center font-semibold font-heading transition-all duration-200 cursor-pointer ${
+            className={`flex-1 py-3 text-center font-semibold transition-all duration-200 cursor-pointer relative ${
               feedType === 'recommended'
-                ? 'text-primary-700 border-b-2 border-primary-500 bg-primary-50/50'
-                : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50/30'
+                ? 'text-brand-500'
+                : 'text-primary-600 hover:text-primary-800'
             }`}
             onClick={() => setFeedType('recommended')}
           >
             推荐
+            {feedType === 'recommended' && (
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-0.5 bg-brand-500 rounded-full"></div>
+            )}
           </button>
           <button
             role="tab"
             aria-selected={feedType === 'following'}
-            className={`flex-1 py-3.5 text-center font-semibold font-heading transition-all duration-200 cursor-pointer ${
+            className={`flex-1 py-3 text-center font-semibold transition-all duration-200 cursor-pointer relative ${
               feedType === 'following'
-                ? 'text-primary-700 border-b-2 border-primary-500 bg-primary-50/50'
-                : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50/30'
+                ? 'text-brand-500'
+                : 'text-primary-600 hover:text-primary-800'
             }`}
             onClick={() => setFeedType('following')}
           >
             关注
+            {feedType === 'following' && (
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-0.5 bg-brand-500 rounded-full"></div>
+            )}
           </button>
         </div>
 
@@ -185,19 +191,19 @@ const Home = () => {
 
       {/* Error/offline notice */}
       {error && (
-        <div className="mx-4 mt-4 p-4 bg-secondary-50 border border-secondary-200 rounded-2xl shadow-soft-sm animate-fade-in" role="alert">
+        <div className="mx-4 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl animate-fade-in" role="alert">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-secondary-100 rounded-full flex items-center justify-center mr-3">
-                <svg className="w-4 h-4 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <span className="text-secondary-800 text-sm font-medium">{error}</span>
+              <span className="text-amber-800 text-sm font-medium">{error}</span>
             </div>
             <button
               onClick={refreshPosts}
-              className="px-4 py-2 btn-secondary text-sm cursor-pointer"
+              className="px-4 py-1.5 bg-white border border-amber-300 rounded-lg text-amber-700 text-sm font-medium hover:bg-amber-50 cursor-pointer transition-colors"
               disabled={loading}
             >
               {loading ? '刷新中...' : '重试'}
@@ -210,8 +216,8 @@ const Home = () => {
       {loading && posts.length === 0 && (
         <div className="flex justify-center items-center py-16">
           <div className="text-center">
-            <div className="w-12 h-12 border-3 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-primary-600 font-medium">加载中...</p>
+            <div className="w-10 h-10 border-3 border-primary-200 border-t-brand-500 rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-primary-600 text-sm">加载中...</p>
           </div>
         </div>
       )}
@@ -230,13 +236,13 @@ const Home = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-16 px-4">
-              <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-primary-600 font-medium">没有找到相关内容</p>
-              <p className="text-primary-400 text-sm mt-1">试试其他关键词或标签</p>
+              <p className="text-primary-700 font-medium text-sm">没有找到相关内容</p>
+              <p className="text-primary-400 text-xs mt-1">试试其他关键词或标签</p>
             </div>
           )}
         </main>
