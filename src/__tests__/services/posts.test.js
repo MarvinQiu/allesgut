@@ -56,28 +56,57 @@ describe('Posts Service', () => {
   });
 
   describe('getPost', () => {
-    test('fetches single post by id', async () => {
+    test('fetches single post by id (and normalizes mediaUrls)', async () => {
       api.get.mockResolvedValue({
-        data: { success: true, data: { id: 1, title: 'Test' } }
+        data: {
+          success: true,
+          data: {
+            id: 1,
+            title: 'Test',
+            content: 'Body',
+            author: { nickname: 'A', avatarUrl: 'https://example.com/a.png' },
+            mediaUrls: ['https://example.com/1.png', 'https://example.com/2.png'],
+            tags: ['t1'],
+            likesCount: 1,
+            commentsCount: 2,
+            createdAt: '2026-01-01T00:00:00Z'
+          }
+        }
       });
 
       const result = await postsService.getPost(1);
 
       expect(api.get).toHaveBeenCalledWith('/posts/1');
-      expect(result).toEqual({ id: 1, title: 'Test' });
+      expect(result.image).toBe('https://example.com/1.png');
+      expect(result.images).toEqual(['https://example.com/1.png', 'https://example.com/2.png']);
     });
   });
 
   describe('createPost', () => {
-    test('creates post with data', async () => {
+    test('creates post with data (and normalizes mediaUrls)', async () => {
       api.post.mockResolvedValue({
-        data: { success: true, data: { id: 1 } }
+        data: {
+          success: true,
+          data: {
+            id: 1,
+            title: 'Test',
+            content: 'Content',
+            author: { nickname: 'A', avatarUrl: 'https://example.com/a.png' },
+            mediaUrls: ['https://example.com/1.png'],
+            tags: ['tag1'],
+            likesCount: 0,
+            commentsCount: 0,
+            createdAt: '2026-01-01T00:00:00Z'
+          }
+        }
       });
 
       const postData = { title: 'Test', content: 'Content', tags: ['tag1'] };
-      await postsService.createPost(postData);
+      const created = await postsService.createPost(postData);
 
       expect(api.post).toHaveBeenCalledWith('/posts', postData);
+      expect(created.image).toBe('https://example.com/1.png');
+      expect(created.images).toEqual(['https://example.com/1.png']);
     });
   });
 

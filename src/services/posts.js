@@ -16,6 +16,24 @@ function formatTime(dateString) {
   return date.toLocaleDateString('zh-CN');
 }
 
+const normalizePost = (post) => ({
+  id: post.id,
+  title: post.title,
+  content: post.content,
+  author: post.author?.nickname || 'Unknown',
+  avatar: post.author?.avatarUrl || 'https://via.placeholder.com/100',
+  image: post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : null,
+  images: post.mediaUrls || [],
+  tags: post.tags || [],
+  likes: post.likesCount || 0,
+  comments: post.commentsCount || 0,
+  favorites: post.favoritesCount || 0,
+  is_liked: post.isLiked || false,
+  is_favorited: post.isFavorited || false,
+  time: formatTime(post.createdAt),
+  _original: post,
+});
+
 export const postsService = {
   async getPosts({ page = 0, limit = 20, feed_type = 'recommended', tag, search } = {}) {
     // Frontend uses 0-based paging; clamp to 0 to avoid sending negative values.
@@ -30,21 +48,7 @@ export const postsService = {
 
     // Transform backend format to frontend format
     if (result.data) {
-      result.data = result.data.map(post => ({
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        author: post.author?.nickname || 'Unknown',
-        avatar: post.author?.avatarUrl || 'https://via.placeholder.com/100',
-        image: post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : null,
-        images: post.mediaUrls || [],
-        tags: post.tags || [],
-        likes: post.likesCount || 0,
-        comments: post.commentsCount || 0,
-        time: formatTime(post.createdAt),
-        // Keep original fields for detail view
-        _original: post
-      }));
+      result.data = result.data.map(normalizePost);
     }
 
     return result;
@@ -52,12 +56,12 @@ export const postsService = {
 
   async getPost(id) {
     const response = await api.get(`/posts/${id}`);
-    return response.data.data;
+    return normalizePost(response.data.data);
   },
 
   async createPost(data) {
     const response = await api.post('/posts', data);
-    return response.data.data;
+    return normalizePost(response.data.data);
   },
 
   async updatePost(id, data) {

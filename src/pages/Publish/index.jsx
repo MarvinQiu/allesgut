@@ -89,8 +89,8 @@ const Publish = () => {
         title: formData.title.trim(),
         content: formData.content.trim(),
         tags: selectedTags,
-        media_urls: imageUrls,
-        media_type: 'image'
+        mediaUrls: imageUrls,
+        mediaType: 'image'
       });
 
       alert('发布成功！');
