@@ -4,6 +4,7 @@ import com.allesgut.dto.request.CreatePostRequest;
 import com.allesgut.dto.response.ApiResponse;
 import com.allesgut.dto.response.PageResponse;
 import com.allesgut.dto.response.PostDto;
+import com.allesgut.dto.response.PostPublicDto;
 import com.allesgut.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class PostsController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<PostDto>>> getFeed(
+    public ResponseEntity<ApiResponse<PageResponse<PostPublicDto>>> getFeed(
             @RequestParam(defaultValue = "recommended") String feedType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int limit,
@@ -43,12 +44,12 @@ public class PostsController {
                 ? UUID.fromString(authentication.getName())
                 : null;
 
-        PageResponse<PostDto> feed = postService.getFeed(feedType, currentUserId, page, limit, tag);
+        PageResponse<PostPublicDto> feed = postService.getFeed(feedType, currentUserId, page, limit, tag);
         return ResponseEntity.ok(ApiResponse.success(feed));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PostDto>> getPostById(
+    public ResponseEntity<ApiResponse<PostPublicDto>> getPostById(
             @PathVariable UUID id,
             Authentication authentication) {
 
@@ -56,7 +57,7 @@ public class PostsController {
                 ? UUID.fromString(authentication.getName())
                 : null;
 
-        PostDto post = postService.getPostById(id, currentUserId);
+        PostPublicDto post = postService.getPostById(id, currentUserId);
         return ResponseEntity.ok(ApiResponse.success(post));
     }
 

@@ -3,6 +3,8 @@ package com.allesgut.service;
 import com.allesgut.dto.request.CreatePostRequest;
 import com.allesgut.dto.response.PageResponse;
 import com.allesgut.dto.response.PostDto;
+import com.allesgut.dto.response.PostPublicDto;
+import com.allesgut.dto.response.PublicUserDto;
 import com.allesgut.dto.response.UserDto;
 import com.allesgut.entity.*;
 import com.allesgut.entity.UserFollow;
@@ -82,8 +84,8 @@ public class PostService {
         return mapToDto(post, user, tagNames, false, false);
     }
 
-    public PageResponse<PostDto> getFeed(String feedType, UUID currentUserId,
-                                         int page, int limit, String tag) {
+    public PageResponse<PostPublicDto> getFeed(String feedType, UUID currentUserId,
+                                               int page, int limit, String tag) {
         Pageable pageable = PageRequest.of(page, limit);
         Page<Post> postsPage;
 
@@ -106,7 +108,7 @@ public class PostService {
         }
 
         // Convert to DTOs
-        List<PostDto> postDtos = postsPage.getContent().stream()
+        List<PostPublicDto> postDtos = postsPage.getContent().stream()
                 .map(post -> {
                     User author = userRepository.findById(post.getUserId())
                             .orElse(null);
@@ -115,7 +117,7 @@ public class PostService {
                     boolean isFavorited = currentUserId != null &&
                             postFavoriteRepository.existsByUserIdAndPostId(currentUserId, post.getId());
 
-                    return mapToDto(post, author, List.of(), isLiked, isFavorited);
+                    return mapToPublicDto(post, author, List.of(), isLiked, isFavorited);
                 })
                 .toList();
 
@@ -143,7 +145,7 @@ public class PostService {
         return PageResponse.of(postDtos, page, limit, postsPage.getTotalElements());
     }
 
-    public PostDto getPostById(UUID postId, UUID currentUserId) {
+    public PostPublicDto getPostById(UUID postId, UUID currentUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
@@ -158,7 +160,7 @@ public class PostService {
         // Get tags for this post (simplified - you'd need a proper junction table query)
         List<String> tags = List.of(); // TODO: Implement proper tag fetching
 
-        return mapToDto(post, author, tags, isLiked, isFavorited);
+        return mapToPublicDto(post, author, tags, isLiked, isFavorited);
     }
 
     @Transactional
@@ -253,6 +255,10 @@ public class PostService {
 
     private PostDto mapToDto(Post post, User author, List<String> tags,
                              boolean isLiked, boolean isFavorited) {
+        if (author == null) {
+            throw new IllegalArgumentException("Author not found");
+        }
+
         UserDto authorDto = new UserDto(
                 author.getId(),
                 author.getPhone(),
@@ -265,6 +271,35 @@ public class PostService {
         );
 
         return new PostDto(
+                post.getId(),
+                authorDto,
+                post.getTitle(),
+                post.getContent(),
+                post.getMediaType(),
+                post.getMediaUrls(),
+                tags,
+                post.getLikesCount(),
+                post.getCommentsCount(),
+                post.getFavoritesCount(),
+                isLiked,
+                isFavorited,
+                post.getCreatedAt(),
+                post.getUpdatedAt()
+        );
+    }
+
+    private PostPublicDto mapToPublicDto(Post post, User author, List<String> tags,
+                                        boolean isLiked, boolean isFavorited) {
+        if (author == null) {
+            throw new IllegalArgumentException("Author not found");
+        }
+
+        PublicUserDto authorDto = new PublicUserDto(
+                author.getNickname(),
+                author.getAvatarUrl()
+        );
+
+        return new PostPublicDto(
                 post.getId(),
                 authorDto,
                 post.getTitle(),

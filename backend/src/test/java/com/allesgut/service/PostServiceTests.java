@@ -3,6 +3,7 @@ package com.allesgut.service;
 import com.allesgut.dto.request.CreatePostRequest;
 import com.allesgut.dto.response.PageResponse;
 import com.allesgut.dto.response.PostDto;
+import com.allesgut.dto.response.PostPublicDto;
 import com.allesgut.entity.Post;
 import com.allesgut.entity.Tag;
 import com.allesgut.entity.User;
@@ -134,7 +135,7 @@ class PostServiceTests {
                 .thenReturn(Optional.of(testUser));
 
         // When
-        PageResponse<PostDto> result = postService.getFeed("recommended", null, 0, 20, null);
+        PageResponse<PostPublicDto> result = postService.getFeed("recommended", null, 0, 20, null);
 
         // Then
         assertThat(result.getData()).hasSize(1);
@@ -156,7 +157,7 @@ class PostServiceTests {
         when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
 
         // When
-        PostDto result = postService.getPostById(postId, null);
+        PostPublicDto result = postService.getPostById(postId, null);
 
         // Then
         assertThat(result).isNotNull();

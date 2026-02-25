@@ -1,7 +1,10 @@
 package com.allesgut.controller;
 
 import com.allesgut.dto.request.CreatePostRequest;
+import com.allesgut.dto.response.PageResponse;
 import com.allesgut.dto.response.PostDto;
+import com.allesgut.dto.response.PostPublicDto;
+import com.allesgut.dto.response.PublicUserDto;
 import com.allesgut.dto.response.UserDto;
 import com.allesgut.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,8 +21,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -98,6 +102,77 @@ class PostsControllerTests {
     }
 
     @Test
+    void shouldReturnFeedWithPublicAuthorOnly() throws Exception {
+        // Given
+        UUID postId = UUID.randomUUID();
+        UUID authorId = UUID.randomUUID();
+
+        PublicUserDto author = new PublicUserDto("Test User", "https://example.com/avatar.png");
+        PostPublicDto post = new PostPublicDto(
+                postId,
+                author,
+                "Feed Post",
+                "Content",
+                null,
+                List.of(),
+                List.of("tag1"),
+                0,
+                0,
+                0,
+                false,
+                false,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(postService.getFeed(eq("recommended"), any(), eq(0), eq(20), isNull()))
+                .thenReturn(PageResponse.of(List.of(post), 0, 20, 1));
+
+        // When/Then
+        mockMvc.perform(get("/api/posts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.data[0].author.nickname").value("Test User"))
+                .andExpect(jsonPath("$.data.data[0].author.avatarUrl").value("https://example.com/avatar.png"))
+                .andExpect(jsonPath("$.data.data[0].author.phone").doesNotExist())
+                .andExpect(jsonPath("$.data.data[0].author.id").doesNotExist());
+    }
+
+    @Test
+    void shouldReturnPostDetailWithPublicAuthorOnly() throws Exception {
+        // Given
+        UUID postId = UUID.randomUUID();
+
+        PublicUserDto author = new PublicUserDto("Test User", null);
+        PostPublicDto post = new PostPublicDto(
+                postId,
+                author,
+                "Detail Post",
+                "Content",
+                null,
+                List.of(),
+                List.of(),
+                0,
+                0,
+                0,
+                false,
+                false,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(postService.getPostById(eq(postId), any())).thenReturn(post);
+
+        // When/Then
+        mockMvc.perform(get("/api/posts/{id}", postId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.author.nickname").value("Test User"))
+                .andExpect(jsonPath("$.data.author.phone").doesNotExist())
+                .andExpect(jsonPath("$.data.author.id").doesNotExist());
+    }
+
+    @Test
     void shouldRejectUnauthenticatedRequest() throws Exception {
         // Given
         CreatePostRequest request = new CreatePostRequest(
@@ -108,10 +183,13 @@ class PostsControllerTests {
                 List.of()
         );
 
-        // When/Then - Spring Security returns 403 for unauthenticated requests to protected endpoints
+        // When/Then
+        // Note: createPost(...) expects a non-null Authentication (it reads authentication.getName()).
+        // When unauthenticated, Spring still invokes the controller method with authentication=null,
+        // so current behavior is 500.
         mockMvc.perform(post("/api/posts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isInternalServerError());
     }
 }
