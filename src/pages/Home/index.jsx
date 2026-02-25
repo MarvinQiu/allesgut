@@ -15,6 +15,12 @@ const Home = () => {
   const [feedType, setFeedType] = useState('recommended');
   const [tags, setTags] = useState([]);
 
+  // Paging state (0-based)
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
+
   // Hide bottom navigation when post detail is open
   useEffect(() => {
     const bottomNav = document.querySelector('.bottom-navigation');
@@ -92,29 +98,41 @@ const Home = () => {
     loadTags();
   }, []);
 
-  // Load posts
-  const loadPosts = async () => {
+  // Load posts (initial page load)
+  const loadPosts = async (requestedPage = 0) => {
     setLoading(true);
     setError(null);
+    setOfflineMode(false);
 
     try {
       const result = await postsService.getPosts({
         feed_type: feedType,
         search: searchQuery || undefined,
         tag: selectedTags[0] || undefined,
-        page: 1,
+        page: requestedPage,
       });
-      setPosts(result.data || []);
+
+      const totalPages = Number.isFinite(result?.totalPages) ? result.totalPages : 1;
+      setPosts(result?.data || []);
+      setPage(requestedPage);
+      setHasMore(requestedPage + 1 < totalPages);
     } catch {
       setPosts(fallbackPosts);
+      setOfflineMode(true);
+      setHasMore(false);
       setError('使用离线数据');
     } finally {
       setLoading(false);
     }
   };
 
+  // Reset paging state when query changes
   useEffect(() => {
-    loadPosts();
+    setPage(0);
+    setHasMore(true);
+    setLoadingMore(false);
+    setOfflineMode(false);
+    loadPosts(0);
   }, [feedType, searchQuery, selectedTags]);
 
   const refreshPosts = async () => {
