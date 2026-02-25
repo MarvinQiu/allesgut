@@ -18,7 +18,7 @@ describe('Posts Service', () => {
   });
 
   describe('getPosts', () => {
-    test('fetches posts with default params', async () => {
+    test('uses 0-based paging by default (page=0)', async () => {
       api.get.mockResolvedValue({
         data: { success: true, data: { posts: [], total: 0 } }
       });
@@ -30,15 +30,27 @@ describe('Posts Service', () => {
       });
     });
 
-    test('fetches posts with custom params', async () => {
+    test('passes through custom params (page is 0-based)', async () => {
       api.get.mockResolvedValue({
         data: { success: true, data: { posts: [], total: 0 } }
       });
 
-      await postsService.getPosts({ page: 2, feed_type: 'following', tag: '自闭症' });
+      await postsService.getPosts({ page: 1, feed_type: 'following', tag: '自闭症' });
 
       expect(api.get).toHaveBeenCalledWith('/posts', {
         params: { page: 1, limit: 20, feedType: 'following', tag: '自闭症' }
+      });
+    });
+
+    test('clamps negative page to 0', async () => {
+      api.get.mockResolvedValue({
+        data: { success: true, data: { posts: [], total: 0 } }
+      });
+
+      await postsService.getPosts({ page: -5, feed_type: 'recommended' });
+
+      expect(api.get).toHaveBeenCalledWith('/posts', {
+        params: { page: 0, limit: 20, feedType: 'recommended' }
       });
     });
   });

@@ -17,8 +17,11 @@ function formatTime(dateString) {
 }
 
 export const postsService = {
-  async getPosts({ page = 1, limit = 20, feed_type = 'recommended', tag, search } = {}) {
-    const params = { page: page - 1, limit, feedType: feed_type };
+  async getPosts({ page = 0, limit = 20, feed_type = 'recommended', tag, search } = {}) {
+    // Frontend uses 0-based paging; clamp to 0 to avoid sending negative values.
+    const safePage = Math.max(0, page);
+
+    const params = { page: safePage, limit, feedType: feed_type };
     if (tag) params.tag = tag;
     if (search) params.search = search;
 

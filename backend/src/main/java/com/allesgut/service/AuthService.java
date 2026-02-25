@@ -62,11 +62,15 @@ public class AuthService {
         return new LoginResponse(token, userDto);
     }
 
+    private static final String DEFAULT_AVATAR_URL =
+            "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face";
+
     private User createNewUser(String phone) {
         String defaultNickname = "用户" + ThreadLocalRandom.current().nextInt(100000);
         User newUser = User.builder()
                 .phone(phone)
                 .nickname(defaultNickname)
+                .avatarUrl(DEFAULT_AVATAR_URL)
                 .build();
         return userRepository.save(newUser);
     }
