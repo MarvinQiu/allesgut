@@ -1,7 +1,7 @@
 import api from './api';
 
 export const commentsService = {
-  async getComments(postId, { page = 1, limit = 20 } = {}) {
+  async getComments(postId, { page = 0, limit = 20 } = {}) {
     const response = await api.get(`/posts/${postId}/comments`, {
       params: { page, limit }
     });

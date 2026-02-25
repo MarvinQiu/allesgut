@@ -23,11 +23,11 @@ const Profile = () => {
       setLoading(true);
       try {
         if (activeTab === 'posts') {
-          const result = await usersService.getUserPosts(user.id);
-          setPosts(result.posts || []);
+          const result = await usersService.getUserPosts(user.id, { page: 0, limit: 20 });
+          setPosts(result.data || result.posts || []);
         } else if (activeTab === 'favorites') {
-          const result = await usersService.getMyFavorites();
-          setFavorites(result.posts || []);
+          const result = await usersService.getMyFavorites({ page: 0, limit: 20 });
+          setFavorites(result.data || result.posts || []);
         }
       } catch (error) {
         console.error('Failed to load data:', error);

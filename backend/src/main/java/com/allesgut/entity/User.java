@@ -32,12 +32,15 @@ public class User {
 
     private String bio;
 
+    @Builder.Default
     @Column(name = "posts_count")
     private Integer postsCount = 0;
 
+    @Builder.Default
     @Column(name = "followers_count")
     private Integer followersCount = 0;
 
+    @Builder.Default
     @Column(name = "following_count")
     private Integer followingCount = 0;
 

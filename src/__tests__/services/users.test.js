@@ -71,7 +71,7 @@ describe('Users Service', () => {
       await usersService.getUserPosts(1);
 
       expect(api.get).toHaveBeenCalledWith('/users/1/posts', {
-        params: { page: 1, limit: 20 }
+        params: { page: 0, limit: 20 }
       });
     });
   });

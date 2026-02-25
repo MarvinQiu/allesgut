@@ -26,7 +26,7 @@ describe('Posts Service', () => {
       await postsService.getPosts();
 
       expect(api.get).toHaveBeenCalledWith('/posts', {
-        params: { page: 1, limit: 20, feed_type: 'recommended' }
+        params: { page: 0, limit: 20, feedType: 'recommended' }
       });
     });
 
@@ -38,7 +38,7 @@ describe('Posts Service', () => {
       await postsService.getPosts({ page: 2, feed_type: 'following', tag: '自闭症' });
 
       expect(api.get).toHaveBeenCalledWith('/posts', {
-        params: { page: 2, limit: 20, feed_type: 'following', tag: '自闭症' }
+        params: { page: 1, limit: 20, feedType: 'following', tag: '自闭症' }
       });
     });
   });

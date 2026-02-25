@@ -25,7 +25,7 @@ describe('Comments Service', () => {
       await commentsService.getComments(1);
 
       expect(api.get).toHaveBeenCalledWith('/posts/1/comments', {
-        params: { page: 1, limit: 20 }
+        params: { page: 0, limit: 20 }
       });
     });
   });

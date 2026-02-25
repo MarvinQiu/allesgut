@@ -21,28 +21,28 @@ export const usersService = {
     return response.data;
   },
 
-  async getFollowers(id, { page = 1, limit = 20 } = {}) {
+  async getFollowers(id, { page = 0, limit = 20 } = {}) {
     const response = await api.get(`/users/${id}/followers`, {
       params: { page, limit }
     });
     return response.data.data;
   },
 
-  async getFollowing(id, { page = 1, limit = 20 } = {}) {
+  async getFollowing(id, { page = 0, limit = 20 } = {}) {
     const response = await api.get(`/users/${id}/following`, {
       params: { page, limit }
     });
     return response.data.data;
   },
 
-  async getUserPosts(id, { page = 1, limit = 20 } = {}) {
+  async getUserPosts(id, { page = 0, limit = 20 } = {}) {
     const response = await api.get(`/users/${id}/posts`, {
       params: { page, limit }
     });
     return response.data.data;
   },
 
-  async getMyFavorites({ page = 1, limit = 20 } = {}) {
+  async getMyFavorites({ page = 0, limit = 20 } = {}) {
     const response = await api.get('/users/me/favorites', {
       params: { page, limit }
     });
@@ -59,7 +59,7 @@ export const usersService = {
     return response.data;
   },
 
-  async searchUsers(query, { page = 1, limit = 20 } = {}) {
+  async searchUsers(query, { page = 0, limit = 20 } = {}) {
     const response = await api.get('/users/search', {
       params: { q: query, page, limit }
     });

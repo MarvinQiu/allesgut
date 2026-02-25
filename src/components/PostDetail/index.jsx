@@ -26,8 +26,8 @@ const PostDetail = ({ post, onClose }) => {
       if (!showComments || !post?.id) return;
       setCommentsLoading(true);
       try {
-        const result = await commentsService.getComments(post.id);
-        setComments(result.comments || []);
+        const result = await commentsService.getComments(post.id, { page: 0, limit: 20 });
+        setComments(result.data || result.comments || []);
       } catch (error) {
         console.error('Failed to load comments:', error);
       } finally {
@@ -363,14 +363,14 @@ const PostDetail = ({ post, onClose }) => {
                 {comments.map((comment) => (
                   <article key={comment.id} className="flex space-x-3">
                     <img
-                      src={comment.avatar}
-                      alt={`${comment.author}的头像`}
+                      src={comment.author?.avatarUrl || comment.avatar}
+                      alt={`${comment.author?.nickname || comment.author}的头像`}
                       className="w-8 h-8 rounded-full border border-primary-100"
                     />
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-semibold text-primary-900 text-sm">{comment.author}</span>
-                        <span className="text-primary-400 text-xs">{comment.time}</span>
+                        <span className="font-semibold text-primary-900 text-sm">{comment.author?.nickname || comment.author}</span>
+                        <span className="text-primary-400 text-xs">{comment.createdAt || comment.time}</span>
                       </div>
                       <p className="text-primary-700 text-sm leading-6">{comment.content}</p>
                     </div>
