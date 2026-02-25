@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import SearchBar from '../../components/SearchBar';
 import TagFilter from '../../components/TagFilter';
 import PostCard from '../../components/PostCard';
@@ -20,6 +20,8 @@ const Home = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
+
+  const sentinelRef = useRef(null);
 
   // Hide bottom navigation when post detail is open
   useEffect(() => {
@@ -138,6 +140,57 @@ const Home = () => {
   const refreshPosts = async () => {
     await loadPosts(0);
   };
+
+  const loadMore = useCallback(async () => {
+    if (offlineMode || loading || loadingMore || !hasMore) return;
+
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const result = await postsService.getPosts({
+        feed_type: feedType,
+        search: searchQuery || undefined,
+        tag: selectedTags[0] || undefined,
+        page: nextPage,
+      });
+
+      const resultPage = Number.isFinite(result?.page) ? result.page : nextPage;
+      const totalPages = Number.isFinite(result?.totalPages) ? result.totalPages : 1;
+      const newPosts = result?.data || [];
+
+      setPosts(prev => [...prev, ...newPosts]);
+      setPage(resultPage);
+      setHasMore(resultPage + 1 < totalPages);
+      setOfflineMode(false);
+    } catch {
+      // If load-more fails, stop further paging to avoid request storms.
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [offlineMode, loading, loadingMore, hasMore, page, feedType, searchQuery, selectedTags]);
+
+  // Infinite scroll sentinel
+  useEffect(() => {
+    if (offlineMode) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some(e => e.isIntersecting)) {
+          loadMore();
+        }
+      },
+      { root: null, rootMargin: '200px 0px', threshold: 0 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [offlineMode, loadMore]);
 
   // Client-side filtering only for offline fallback data
   const filteredPosts = offlineMode
@@ -265,6 +318,21 @@ const Home = () => {
               </div>
               <p className="text-primary-700 font-medium text-sm">没有找到相关内容</p>
               <p className="text-primary-400 text-xs mt-1">试试其他关键词或标签</p>
+            </div>
+          )}
+
+          {/* Infinite scroll sentinel */}
+          {!offlineMode && (
+            <div
+              ref={sentinelRef}
+              aria-hidden="true"
+              className="col-span-full w-full h-px"
+            />
+          )}
+
+          {loadingMore && (
+            <div className="col-span-full flex justify-center py-6">
+              <div className="w-6 h-6 border-2 border-primary-200 border-t-brand-500 rounded-full animate-spin" />
             </div>
           )}
         </main>
