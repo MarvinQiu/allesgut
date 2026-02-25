@@ -1,6 +1,6 @@
 import React, { act } from 'react';
 import { render, waitFor } from '@testing-library/react';
-import Home from '../../pages/Home';
+import Home from '../../pages/Home/index.jsx';
 import { postsService } from '../../services/posts';
 
 jest.mock('../../services/posts', () => ({

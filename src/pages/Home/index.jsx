@@ -3,6 +3,7 @@ import SearchBar from '../../components/SearchBar';
 import TagFilter from '../../components/TagFilter';
 import PostCard from '../../components/PostCard';
 import PostDetail from '../../components/PostDetail';
+import Masonry from '../../components/Masonry';
 import { postsService } from '../../services/posts';
 
 const Home = () => {
@@ -299,18 +300,22 @@ const Home = () => {
 
       {/* Posts grid */}
       {(!loading || posts.length > 0) && (
-        <main className="waterfall-container pt-4 pb-24">
+        <div className="pt-4 pb-24">
           {filteredPosts.length > 0 ? (
-            filteredPosts.map((post) => (
-              <div key={post.id} className="waterfall-item">
+            <Masonry
+              items={filteredPosts}
+              getKey={(post) => post.id}
+              gap={12}
+              className="px-4 max-w-[1200px] mx-auto"
+              renderItem={(post) => (
                 <PostCard
                   post={post}
                   onClick={setSelectedPost}
                 />
-              </div>
-            ))
+              )}
+            />
           ) : (
-            <div className="col-span-full text-center py-16 px-4">
+            <div className="text-center py-16 px-4">
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <svg className="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -321,21 +326,21 @@ const Home = () => {
             </div>
           )}
 
-          {/* Infinite scroll sentinel */}
+          {/* Infinite scroll sentinel (must be outside Masonry) */}
           {!offlineMode && (
             <div
               ref={sentinelRef}
               aria-hidden="true"
-              className="col-span-full w-full h-px"
+              className="w-full h-px"
             />
           )}
 
           {loadingMore && (
-            <div className="col-span-full flex justify-center py-6">
+            <div className="flex justify-center py-6">
               <div className="w-6 h-6 border-2 border-primary-200 border-t-brand-500 rounded-full animate-spin" />
             </div>
           )}
-        </main>
+        </div>
       )}
 
       {/* Post detail modal */}

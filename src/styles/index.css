@@ -65,7 +65,7 @@
 
 }
 
-/* Waterfall/Masonry Layout */
+/* Waterfall/Masonry Layout (used by Mall) */
 .waterfall-container {
   column-count: 2;
   column-gap: 12px;
