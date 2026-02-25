@@ -35,7 +35,7 @@ describe('Posts Service', () => {
         data: { success: true, data: { posts: [], total: 0 } }
       });
 
-      await postsService.getPosts({ page: 2, feed_type: 'following', tag: '自闭症' });
+      await postsService.getPosts({ page: 1, feed_type: 'following', tag: '自闭症' });
 
       expect(api.get).toHaveBeenCalledWith('/posts', {
         params: { page: 1, limit: 20, feedType: 'following', tag: '自闭症' }

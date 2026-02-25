@@ -17,8 +17,8 @@ function formatTime(dateString) {
 }
 
 export const postsService = {
-  async getPosts({ page = 1, limit = 20, feed_type = 'recommended', tag, search } = {}) {
-    const params = { page: page - 1, limit, feedType: feed_type };
+  async getPosts({ page = 0, limit = 20, feed_type = 'recommended', tag, search } = {}) {
+    const params = { page, limit, feedType: feed_type };
     if (tag) params.tag = tag;
     if (search) params.search = search;
 
