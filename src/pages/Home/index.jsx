@@ -102,7 +102,6 @@ const Home = () => {
   const loadPosts = async (requestedPage = 0) => {
     setLoading(true);
     setError(null);
-    setOfflineMode(false);
 
     try {
       const result = await postsService.getPosts({
@@ -116,6 +115,7 @@ const Home = () => {
       setPosts(result?.data || []);
       setPage(requestedPage);
       setHasMore(requestedPage + 1 < totalPages);
+      setOfflineMode(false);
     } catch {
       setPosts(fallbackPosts);
       setOfflineMode(true);
@@ -128,28 +128,32 @@ const Home = () => {
 
   // Reset paging state when query changes
   useEffect(() => {
-    setPage(0);
+    // Clear current list immediately while we fetch page 0 for the new query
+    setPosts([]);
     setHasMore(true);
     setLoadingMore(false);
-    setOfflineMode(false);
     loadPosts(0);
   }, [feedType, searchQuery, selectedTags]);
 
   const refreshPosts = async () => {
-    await loadPosts();
+    await loadPosts(0);
   };
 
-  // Client-side filtering for fallback data
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = !searchQuery ||
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchQuery.toLowerCase());
+  // Client-side filtering only for offline fallback data
+  const filteredPosts = offlineMode
+    ? posts.filter(post => {
+        const matchesSearch =
+          !searchQuery ||
+          post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          post.content.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesTags = selectedTags.length === 0 ||
-      selectedTags.some(tag => post.tags && post.tags.includes(tag));
+        const matchesTags =
+          selectedTags.length === 0 ||
+          selectedTags.some(tag => post.tags && post.tags.includes(tag));
 
-    return matchesSearch && matchesTags;
-  });
+        return matchesSearch && matchesTags;
+      })
+    : posts;
 
   return (
     <div className="min-h-screen bg-white">
