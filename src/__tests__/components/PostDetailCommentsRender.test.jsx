@@ -64,6 +64,28 @@ describe('PostDetail comments', () => {
     expect(await screen.findByText('Hello')).toBeInTheDocument();
   });
 
+  test('initializes follow state from author_is_followed', async () => {
+    commentsService.getComments.mockResolvedValue({ data: [] });
+
+    const post = {
+      id: 'p1',
+      title: 'T',
+      content: 'C',
+      author: 'Someone',
+      avatar: 'https://example.com/a.png',
+      time: 'now',
+      likes: 0,
+      comments: 0,
+      favorites: 0,
+      images: ['https://example.com/i.png'],
+      author_is_followed: true,
+    };
+
+    render(<PostDetail post={post} onClose={() => {}} />);
+
+    expect(await screen.findByText('已关注')).toBeInTheDocument();
+  });
+
   test('calls follow endpoint with author_id when tapping follow', async () => {
     commentsService.getComments.mockResolvedValue({ data: [] });
     usersService.followUser.mockResolvedValue({ success: true });

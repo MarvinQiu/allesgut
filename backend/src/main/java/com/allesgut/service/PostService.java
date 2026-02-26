@@ -117,7 +117,10 @@ public class PostService {
                     boolean isFavorited = currentUserId != null &&
                             postFavoriteRepository.existsByUserIdAndPostId(currentUserId, post.getId());
 
-                    return mapToPublicDto(post, author, List.of(), isLiked, isFavorited);
+                    boolean isAuthorFollowed = currentUserId != null && author != null &&
+                            userFollowRepository.existsByFollowerIdAndFollowingId(currentUserId, author.getId());
+
+                    return mapToPublicDto(post, author, List.of(), isLiked, isFavorited, isAuthorFollowed);
                 })
                 .toList();
 
@@ -160,7 +163,10 @@ public class PostService {
         // Get tags for this post (simplified - you'd need a proper junction table query)
         List<String> tags = List.of(); // TODO: Implement proper tag fetching
 
-        return mapToPublicDto(post, author, tags, isLiked, isFavorited);
+        boolean isAuthorFollowed = currentUserId != null &&
+                userFollowRepository.existsByFollowerIdAndFollowingId(currentUserId, author.getId());
+
+        return mapToPublicDto(post, author, tags, isLiked, isFavorited, isAuthorFollowed);
     }
 
     @Transactional
@@ -289,7 +295,7 @@ public class PostService {
     }
 
     private PostPublicDto mapToPublicDto(Post post, User author, List<String> tags,
-                                        boolean isLiked, boolean isFavorited) {
+                                        boolean isLiked, boolean isFavorited, boolean isAuthorFollowed) {
         if (author == null) {
             throw new IllegalArgumentException("Author not found");
         }
@@ -313,6 +319,7 @@ public class PostService {
                 post.getFavoritesCount(),
                 isLiked,
                 isFavorited,
+                isAuthorFollowed,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

@@ -17,6 +17,7 @@ public record PostPublicDto(
         Integer favoritesCount,
         Boolean isLiked,
         Boolean isFavorited,
+        Boolean authorIsFollowed,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {}

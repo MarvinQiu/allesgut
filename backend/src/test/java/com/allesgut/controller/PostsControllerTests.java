@@ -121,6 +121,7 @@ class PostsControllerTests {
                 0,
                 false,
                 false,
+                false,
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );
@@ -158,6 +159,7 @@ class PostsControllerTests {
                 0,
                 false,
                 false,
+                true,
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );
@@ -170,7 +172,8 @@ class PostsControllerTests {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.author.nickname").value("Test User"))
                 .andExpect(jsonPath("$.data.author.phone").doesNotExist())
-                .andExpect(jsonPath("$.data.author.id").value(authorId.toString()));
+                .andExpect(jsonPath("$.data.author.id").value(authorId.toString()))
+                .andExpect(jsonPath("$.data.authorIsFollowed").value(true));
     }
 
     @Test
