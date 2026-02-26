@@ -36,8 +36,8 @@ const Home = () => {
   const fallbackPosts = [
     {
       id: 1,
-      title: '自闭症儿童感统训练的日常小技巧',
-      content: '分享一些在家就能做的感统训练方法，帮助孩子提升专注力和协调能力。感统训练是帮助自闭症儿童改善感觉统合能力的重要方法。通过日常生活中的小游戏和练习，我们可以有效地帮助孩子提升触觉、前庭觉、本体觉等感觉系统的协调性。',
+      title: '训练的日常小技巧',
+      content: '分享一些在家就能做的感统训练方法，帮助孩子提升专注力和协调能力。通过日常生活中的小游戏和练习，我们可以有效地帮助孩子提升触觉、前庭觉、本体觉等感觉系统的协调性。',
       author: '小雨妈妈',
       avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
       image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=300&h=200&fit=crop',
@@ -52,32 +52,8 @@ const Home = () => {
     },
     {
       id: 2,
-      title: '视障儿童学习盲文的心得体会',
-      content: '从零开始学习盲文的经历分享，包括选择教材、学习方法和注意事项。作为视障儿童的家长，我深知盲文学习的重要性。',
-      author: '阳光爸爸',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-      image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=250&fit=crop',
-      tags: ['盲文学习', '视障', '教育'],
-      likes: 89,
-      comments: 15,
-      time: '4小时前'
-    },
-    {
-      id: 3,
-      title: '特殊儿童的营养搭配指南',
-      content: '针对不同特殊需求儿童的营养搭配建议，让孩子健康成长。特殊儿童由于身体条件的特殊性，在营养需求上往往与普通儿童有所不同。',
-      author: '营养师小李',
-      avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face',
-      image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=300&h=180&fit=crop',
-      tags: ['营养搭配', '健康饮食', '儿童护理'],
-      likes: 156,
-      comments: 31,
-      time: '6小时前'
-    },
-    {
-      id: 4,
-      title: '如何为自闭症孩子建立日常作息',
-      content: '建立稳定的日常作息对自闭症儿童非常重要，分享我们家的经验。自闭症孩子往往需要规律和可预测的环境来减少焦虑。',
+      title: '如何为孩子建立日常作息',
+      content: '建立稳定的日常作息对自闭症儿童非常重要，分享我们家的经验。',
       author: '星星妈妈',
       avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
       image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=300&h=220&fit=crop',
