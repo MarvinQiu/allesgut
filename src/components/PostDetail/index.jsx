@@ -87,12 +87,19 @@ const PostDetail = ({ post, onClose }) => {
 
   const handleFollow = async () => {
     if (isFollowLoading) return;
+
+    const authorId = post?.author_id || post?._original?.author?.id || post?.authorId;
+    if (!authorId) {
+      console.error('Cannot follow user: missing author id', post);
+      return;
+    }
+
     setIsFollowLoading(true);
     try {
       if (isFollowing) {
-        await usersService.unfollowUser(post.author_id);
+        await usersService.unfollowUser(authorId);
       } else {
-        await usersService.followUser(post.author_id);
+        await usersService.followUser(authorId);
       }
       setIsFollowing(!isFollowing);
     } catch (error) {

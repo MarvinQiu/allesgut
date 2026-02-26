@@ -10,9 +10,15 @@ jest.mock('../../services/comments', () => ({
 }));
 
 jest.mock('../../services/posts', () => ({ postsService: {} }));
-jest.mock('../../services/users', () => ({ usersService: {} }));
+jest.mock('../../services/users', () => ({
+  usersService: {
+    followUser: jest.fn(),
+    unfollowUser: jest.fn(),
+  }
+}));
 
 const { commentsService } = require('../../services/comments');
+const { usersService } = require('../../services/users');
 
 describe('PostDetail comments', () => {
   test('renders comment author from nested author object', async () => {
@@ -56,5 +62,31 @@ describe('PostDetail comments', () => {
 
     expect(await screen.findByText('Alice')).toBeInTheDocument();
     expect(await screen.findByText('Hello')).toBeInTheDocument();
+  });
+
+  test('calls follow endpoint with author_id when tapping follow', async () => {
+    commentsService.getComments.mockResolvedValue({ data: [] });
+    usersService.followUser.mockResolvedValue({ success: true });
+
+    const post = {
+      id: 'p1',
+      title: 'T',
+      content: 'C',
+      author: 'Someone',
+      avatar: 'https://example.com/a.png',
+      time: 'now',
+      likes: 0,
+      comments: 0,
+      favorites: 0,
+      images: ['https://example.com/i.png'],
+      _original: { author: { id: 'u-123' } }
+    };
+
+    render(<PostDetail post={post} onClose={() => {}} />);
+
+    fireEvent.click(screen.getByText('关注'));
+
+    expect(usersService.followUser).toHaveBeenCalledWith('u-123');
+    expect(await screen.findByText('已关注')).toBeInTheDocument();
   });
 });

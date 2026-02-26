@@ -107,7 +107,7 @@ class PostsControllerTests {
         UUID postId = UUID.randomUUID();
         UUID authorId = UUID.randomUUID();
 
-        PublicUserDto author = new PublicUserDto("Test User", "https://example.com/avatar.png");
+        PublicUserDto author = new PublicUserDto(authorId, "Test User", "https://example.com/avatar.png");
         PostPublicDto post = new PostPublicDto(
                 postId,
                 author,
@@ -135,15 +135,16 @@ class PostsControllerTests {
                 .andExpect(jsonPath("$.data.data[0].author.nickname").value("Test User"))
                 .andExpect(jsonPath("$.data.data[0].author.avatarUrl").value("https://example.com/avatar.png"))
                 .andExpect(jsonPath("$.data.data[0].author.phone").doesNotExist())
-                .andExpect(jsonPath("$.data.data[0].author.id").doesNotExist());
+                .andExpect(jsonPath("$.data.data[0].author.id").value(authorId.toString()));
     }
 
     @Test
     void shouldReturnPostDetailWithPublicAuthorOnly() throws Exception {
         // Given
         UUID postId = UUID.randomUUID();
+        UUID authorId = UUID.randomUUID();
 
-        PublicUserDto author = new PublicUserDto("Test User", null);
+        PublicUserDto author = new PublicUserDto(authorId, "Test User", null);
         PostPublicDto post = new PostPublicDto(
                 postId,
                 author,
@@ -169,7 +170,7 @@ class PostsControllerTests {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.author.nickname").value("Test User"))
                 .andExpect(jsonPath("$.data.author.phone").doesNotExist())
-                .andExpect(jsonPath("$.data.author.id").doesNotExist());
+                .andExpect(jsonPath("$.data.author.id").value(authorId.toString()));
     }
 
     @Test

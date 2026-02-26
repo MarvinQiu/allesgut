@@ -28,6 +28,8 @@ const normalizePost = (post) => ({
   likes: post.likesCount || 0,
   comments: post.commentsCount || 0,
   favorites: post.favoritesCount || 0,
+  author_id: post.author?.id || post.authorId,
+  author_is_followed: post.authorIsFollowed || post.author_is_followed || false,
   is_liked: post.isLiked || false,
   is_favorited: post.isFavorited || false,
   time: formatTime(post.createdAt),

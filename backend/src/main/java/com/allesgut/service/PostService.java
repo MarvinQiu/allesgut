@@ -295,6 +295,7 @@ public class PostService {
         }
 
         PublicUserDto authorDto = new PublicUserDto(
+                author.getId(),
                 author.getNickname(),
                 author.getAvatarUrl()
         );
