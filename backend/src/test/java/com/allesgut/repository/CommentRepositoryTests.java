@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class CommentRepositoryTests {
+class CommentRepositoryTests extends com.allesgut.LocalhostSchemaTestBase {
 
     @Autowired
     private CommentRepository commentRepository;

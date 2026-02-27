@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { postsService } from '../../services/posts';
 import { uploadService } from '../../services/upload';
+import { extractVideoCover } from '../../utils/videoCover';
 
 const Publish = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const Publish = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFiles, setImageFiles] = useState([]); // actual File objects
   const [imagePreviews, setImagePreviews] = useState([]); // preview URLs
+  const [videoFile, setVideoFile] = useState(null);
   const [tags, setTags] = useState([]); // from API
 
   // Fetch tags from API
@@ -56,6 +58,9 @@ const Publish = () => {
       return;
     }
 
+    // Selecting images clears any selected video
+    if (videoFile) setVideoFile(null);
+
     // Create preview URLs
     const newPreviews = files.map(file => URL.createObjectURL(file));
 
@@ -69,6 +74,19 @@ const Publish = () => {
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleVideoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Only allow a single video; clear images to avoid mixed media for now
+    setVideoFile(file);
+    if (imagePreviews.length > 0) {
+      imagePreviews.forEach((p) => URL.revokeObjectURL(p));
+      setImageFiles([]);
+      setImagePreviews([]);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
       alert('请填写标题和内容');
@@ -78,20 +96,42 @@ const Publish = () => {
     setIsSubmitting(true);
 
     try {
-      // Upload images first
-      let imageUrls = [];
-      if (imageFiles.length > 0) {
-        imageUrls = await uploadService.uploadImages(imageFiles);
+      let payload;
+
+      if (videoFile) {
+        const coverBlob = await extractVideoCover(videoFile);
+        const coverFile = new File([coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+        const coverUrl = await uploadService.uploadImage(coverFile);
+        const videoResult = await uploadService.uploadVideo(videoFile);
+        const videoUrl = typeof videoResult === 'string' ? videoResult : videoResult?.url;
+        if (!videoUrl) throw new Error('Video upload did not return a url');
+
+        payload = {
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          tags: selectedTags,
+          mediaUrls: [videoUrl],
+          mediaType: 'video',
+          coverUrl,
+        };
+      } else {
+        // Upload images first
+        let imageUrls = [];
+        if (imageFiles.length > 0) {
+          imageUrls = await uploadService.uploadImages(imageFiles);
+        }
+
+        payload = {
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          tags: selectedTags,
+          mediaUrls: imageUrls,
+          mediaType: 'image',
+        };
       }
 
       // Create the post
-      await postsService.createPost({
-        title: formData.title.trim(),
-        content: formData.content.trim(),
-        tags: selectedTags,
-        mediaUrls: imageUrls,
-        mediaType: 'image'
-      });
+      await postsService.createPost(payload);
 
       alert('发布成功！');
       navigate('/');
@@ -162,12 +202,38 @@ const Publish = () => {
           </div>
         </div>
 
+        {/* 视频上传 */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">添加视频</label>
+          <div className="text-gray-500 text-sm mb-3">
+            <p>最多可上传1个视频（选择视频后将清空已选图片）</p>
+          </div>
+          <label className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-primary-500 transition-colors">
+            <input
+              type="file"
+              accept="video/*"
+              onChange={handleVideoUpload}
+              className="hidden"
+            />
+            <i className="fas fa-video text-gray-400"></i>
+            <span className="text-sm text-gray-600">选择视频</span>
+          </label>
+          {videoFile && (
+            <div className="mt-2 text-sm text-gray-600">
+              已选择：{videoFile.name}
+            </div>
+          )}
+        </div>
+
         {/* 图片上传 */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">添加图片</label>
           <div className="text-gray-500 text-sm mb-3">
             <p>最多可上传9张图片，支持JPG、PNG格式</p>
           </div>
+          {videoFile && (
+            <div className="text-sm text-gray-500 mb-2">已选择视频，不能同时上传图片</div>
+          )}
           {/* Show image previews */}
           <div className="flex flex-wrap gap-2">
             {imagePreviews.map((preview, index) => (
@@ -185,7 +251,7 @@ const Publish = () => {
                 </button>
               </div>
             ))}
-            {imagePreviews.length < 9 && (
+            {!videoFile && imagePreviews.length < 9 && (
               <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer hover:border-primary-500 transition-colors">
                 <input
                   type="file"

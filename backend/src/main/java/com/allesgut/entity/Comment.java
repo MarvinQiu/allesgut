@@ -33,7 +33,8 @@ public class Comment {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "likes_count")
+    @Builder.Default
+    @Column(name = "likes_count", nullable = false)
     private Integer likesCount = 0;
 
     @CreationTimestamp

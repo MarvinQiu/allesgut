@@ -24,6 +24,7 @@ const normalizePost = (post) => ({
   avatar: post.author?.avatarUrl || 'https://via.placeholder.com/100',
   image: post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : null,
   images: post.mediaUrls || [],
+  coverUrl: post.coverUrl || post.cover_url || null,
   tags: post.tags || [],
   likes: post.likesCount || 0,
   comments: post.commentsCount || 0,

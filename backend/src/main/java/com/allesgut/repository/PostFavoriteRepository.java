@@ -5,10 +5,13 @@ import com.allesgut.entity.PostFavoriteId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface PostFavoriteRepository extends JpaRepository<PostFavorite, PostFavoriteId> {
     boolean existsByUserIdAndPostId(UUID userId, UUID postId);
     void deleteByUserIdAndPostId(UUID userId, UUID postId);
+
+    List<PostFavorite> findByUserIdAndPostIdIn(UUID userId, List<UUID> postIds);
 }

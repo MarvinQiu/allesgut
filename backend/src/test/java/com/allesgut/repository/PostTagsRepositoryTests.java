@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional
-class PostTagsRepositoryTests {
+class PostTagsRepositoryTests extends com.allesgut.LocalhostSchemaTestBase {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

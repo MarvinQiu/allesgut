@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional
-class UserRepositoryTests {
+class UserRepositoryTests extends com.allesgut.LocalhostSchemaTestBase {
 
     @Autowired
     private UserRepository userRepository;

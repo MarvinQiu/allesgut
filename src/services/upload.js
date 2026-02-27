@@ -34,6 +34,9 @@ export const uploadService = {
     return response.data.data;
   },
 
+  // NOTE: Backend currently returns a usable video URL immediately from /upload/video,
+  // so we don't poll for processing status in the publish flow.
+  // Keeping the endpoints as opt-in helpers in case processing becomes async later.
   async getVideoStatus(uploadId) {
     const response = await api.get(`/upload/video/${uploadId}/status`);
     return response.data.data;

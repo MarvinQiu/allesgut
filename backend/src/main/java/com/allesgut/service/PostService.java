@@ -17,7 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -109,20 +113,56 @@ public class PostService {
             postsPage = postRepository.findAllByOrderByCreatedAtDesc(pageable);
         }
 
+        List<Post> posts = postsPage.getContent();
+
+        if (posts.isEmpty()) {
+            return PageResponse.of(List.of(), page, limit, postsPage.getTotalElements());
+        }
+
+        List<UUID> postIds = posts.stream().map(Post::getId).toList();
+        Set<UUID> authorIdsSet = posts.stream().map(Post::getUserId).collect(HashSet::new, Set::add, Set::addAll);
+        List<UUID> authorIds = new ArrayList<>(authorIdsSet);
+
+        // Batch load authors
+        Map<UUID, User> authorById = new HashMap<>();
+        for (User user : userRepository.findByIdIn(authorIds)) {
+            authorById.put(user.getId(), user);
+        }
+
+        // Batch load tags
+        Map<UUID, List<String>> tagsByPostId = new HashMap<>();
+        for (PostRepository.PostTagNameProjection row : postRepository.findTagNamesByPostIds(postIds)) {
+            tagsByPostId.computeIfAbsent(row.getPostId(), k -> new ArrayList<>()).add(row.getName());
+        }
+
+        // Batch load liked/favorited for current user
+        Set<UUID> likedPostIds = new HashSet<>();
+        Set<UUID> favoritedPostIds = new HashSet<>();
+        Set<UUID> followedAuthorIds = new HashSet<>();
+
+        if (currentUserId != null) {
+            postLikeRepository.findByUserIdAndPostIdIn(currentUserId, postIds)
+                    .forEach(like -> likedPostIds.add(like.getPostId()));
+
+            postFavoriteRepository.findByUserIdAndPostIdIn(currentUserId, postIds)
+                    .forEach(fav -> favoritedPostIds.add(fav.getPostId()));
+
+            userFollowRepository.findByFollowerIdAndFollowingIdIn(currentUserId, authorIds)
+                    .forEach(follow -> followedAuthorIds.add(follow.getFollowingId()));
+        }
+
         // Convert to DTOs
-        List<PostPublicDto> postDtos = postsPage.getContent().stream()
+        List<PostPublicDto> postDtos = posts.stream()
                 .map(post -> {
-                    User author = userRepository.findById(post.getUserId())
-                            .orElse(null);
-                    boolean isLiked = currentUserId != null &&
-                            postLikeRepository.existsByUserIdAndPostId(currentUserId, post.getId());
-                    boolean isFavorited = currentUserId != null &&
-                            postFavoriteRepository.existsByUserIdAndPostId(currentUserId, post.getId());
-
-                    boolean isAuthorFollowed = currentUserId != null && author != null &&
-                            userFollowRepository.existsByFollowerIdAndFollowingId(currentUserId, author.getId());
-
-                    List<String> tags = postRepository.findTagNamesByPostId(post.getId());
+                    User author = authorById.get(post.getUserId());
+                    if (author == null) {
+                        author = userRepository.findById(post.getUserId())
+                                .orElseThrow(() -> new IllegalArgumentException("Author not found"));
+                    }
+                    boolean isLiked = currentUserId != null && likedPostIds.contains(post.getId());
+                    boolean isFavorited = currentUserId != null && favoritedPostIds.contains(post.getId());
+                    boolean isAuthorFollowed = currentUserId != null && author != null && followedAuthorIds.contains(author.getId());
+                    List<String> tags = tagsByPostId.getOrDefault(post.getId(), List.of());
                     return mapToPublicDto(post, author, tags, isLiked, isFavorited, isAuthorFollowed);
                 })
                 .toList();

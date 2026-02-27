@@ -24,4 +24,16 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query(value = "select t.name from tags t join post_tags pt on pt.tag_id = t.id where pt.post_id = :postId order by t.name", nativeQuery = true)
     List<String> findTagNamesByPostId(@Param("postId") UUID postId);
+
+    @Query(value = "select pt.post_id as postId, t.name as name " +
+            "from post_tags pt join tags t on pt.tag_id = t.id " +
+            "where pt.post_id in (:postIds) " +
+            "order by pt.post_id, t.name", nativeQuery = true)
+    List<PostTagNameProjection> findTagNamesByPostIds(@Param("postIds") List<UUID> postIds);
+
+    interface PostTagNameProjection {
+        UUID getPostId();
+
+        String getName();
+    }
 }

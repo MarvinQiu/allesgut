@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class NotificationRepositoryTests {
+class NotificationRepositoryTests extends com.allesgut.LocalhostSchemaTestBase {
 
     @Autowired
     private NotificationRepository notificationRepository;
