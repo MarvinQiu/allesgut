@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { postsService } from '../../services/posts';
 import { commentsService } from '../../services/comments';
 import { usersService } from '../../services/users';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PostDetail = ({ post, onClose }) => {
+  const { isAuthenticated } = useAuth();
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -86,6 +89,7 @@ const PostDetail = ({ post, onClose }) => {
   };
 
   const handleFollow = async () => {
+    if (!isAuthenticated) return;
     if (isFollowLoading) return;
 
     const authorId = post?.author_id || post?._original?.author?.id || post?.authorId;
@@ -166,12 +170,12 @@ const PostDetail = ({ post, onClose }) => {
         </div>
         <button
           onClick={handleFollow}
-          disabled={isFollowLoading}
+          disabled={!isAuthenticated || isFollowLoading}
           className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
             isFollowing
               ? 'bg-primary-100 text-primary-700 hover:bg-primary-200'
               : 'btn-primary'
-          } ${isFollowLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          } ${!isAuthenticated || isFollowLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {isFollowLoading ? (
             <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">

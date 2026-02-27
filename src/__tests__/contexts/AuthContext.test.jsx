@@ -28,6 +28,30 @@ describe('AuthContext', () => {
     jest.clearAllMocks();
   });
 
+  test('requireAuth opens login modal when unauthenticated', async () => {
+    authService.restoreSession.mockResolvedValue(null);
+
+    const RequireAuthButton = () => {
+      const { requireAuth, isLoginModalOpen } = useAuth();
+      return (
+        <>
+          <button onClick={() => requireAuth(() => {})}>Do</button>
+          {isLoginModalOpen ? <span>Login modal open</span> : null}
+        </>
+      );
+    };
+
+    render(
+      <AuthProvider>
+        <RequireAuthButton />
+      </AuthProvider>
+    );
+
+    await waitFor(() => expect(screen.getByText('Do')).toBeInTheDocument());
+    await userEvent.click(screen.getByText('Do'));
+    expect(screen.getByText('Login modal open')).toBeInTheDocument();
+  });
+
   test('shows loading state initially', () => {
     authService.restoreSession.mockImplementation(() => new Promise(() => {}));
 

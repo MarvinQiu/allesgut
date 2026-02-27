@@ -19,6 +19,8 @@ public record CreatePostRequest(
         @Size(max = 9, message = "Maximum 9 media files allowed")
         List<String> mediaUrls,
 
+        String coverUrl,
+
         @Size(max = 5, message = "Maximum 5 tags allowed")
         List<String> tags
 ) {}

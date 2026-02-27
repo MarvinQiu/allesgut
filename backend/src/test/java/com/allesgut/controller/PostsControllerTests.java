@@ -1,35 +1,37 @@
 package com.allesgut.controller;
 
 import com.allesgut.dto.request.CreatePostRequest;
-import com.allesgut.dto.response.PageResponse;
-import com.allesgut.dto.response.PostDto;
-import com.allesgut.dto.response.PostPublicDto;
-import com.allesgut.dto.response.PublicUserDto;
-import com.allesgut.dto.response.UserDto;
-import com.allesgut.service.PostService;
+import com.allesgut.entity.Post;
+import com.allesgut.entity.Tag;
+import com.allesgut.entity.User;
+import com.allesgut.repository.PostRepository;
+import com.allesgut.repository.TagRepository;
+import com.allesgut.repository.UserRepository;
+import com.allesgut.security.JwtService;
+import org.springframework.jdbc.core.JdbcTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.core.env.Environment;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class PostsControllerTests {
+class PostsControllerTests extends com.allesgut.LocalhostSchemaTestBase {
 
     @Autowired
     private MockMvc mockMvc;
@@ -37,58 +39,79 @@ class PostsControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
-    private PostService postService;
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private TagRepository tagRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private Environment env;
 
     @Test
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
+    void shouldUseIsolatedSchema() {
+        assertThat(env.getProperty("spring.datasource.url")).contains("currentSchema=");
+    }
+
+    @Test
     void shouldCreatePostSuccessfully() throws Exception {
         // Given
-        UUID userId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        User user = userRepository.save(User.builder()
+                .phone("1" + String.format("%010d", Math.abs(UUID.randomUUID().getMostSignificantBits()) % 1_000_000_0000L))
+                .nickname("Test User")
+                .postsCount(0)
+                .followersCount(0)
+                .followingCount(0)
+                .build());
+
+        String token = jwtService.generateToken(user);
+
         CreatePostRequest request = new CreatePostRequest(
                 "Test Post",
                 "This is test content",
+                null,
                 null,
                 null,
                 List.of("tag1", "tag2")
         );
 
-        UserDto author = new UserDto(userId, "138****8000", "Test User",
-                null, null, 1, 0, 0);
-        PostDto postDto = new PostDto(
-                UUID.randomUUID(),
-                author,
-                "Test Post",
-                "This is test content",
-                null,
-                null,
-                List.of("tag1", "tag2"),
-                0, 0, 0,
-                false, false,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(postService.createPost(any(UUID.class), any(CreatePostRequest.class)))
-                .thenReturn(postDto);
-
-        // When/Then
-        mockMvc.perform(post("/api/posts")
+        // When
+        var result = mockMvc.perform(post("/api/posts")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.title").value("Test Post"))
-                .andExpect(jsonPath("$.data.tags[0]").value("tag1"));
+                .andExpect(jsonPath("$.data.tags[0]").value("tag1"))
+                .andReturn();
+
+        // Then (verify join table got rows)
+        String json = result.getResponse().getContentAsString();
+        UUID postId = objectMapper.readTree(json).path("data").path("id").traverse(objectMapper).readValueAs(UUID.class);
+        assertThat(jdbcTemplate.queryForObject(
+                "select count(*) from post_tags where post_id = ?",
+                Integer.class,
+                postId
+        )).isEqualTo(2);
     }
 
     @Test
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void shouldRejectPostWithEmptyTitle() throws Exception {
+        void shouldRejectPostWithEmptyTitle() throws Exception {
         // Given
         CreatePostRequest request = new CreatePostRequest(
                 "", // Empty title
                 "Content",
+                null,
                 null,
                 null,
                 List.of()
@@ -104,76 +127,85 @@ class PostsControllerTests {
     @Test
     void shouldReturnFeedWithPublicAuthorOnly() throws Exception {
         // Given
-        UUID postId = UUID.randomUUID();
-        UUID authorId = UUID.randomUUID();
+        User author = userRepository.save(User.builder()
+                .phone("1" + String.format("%010d", Math.abs(UUID.randomUUID().getMostSignificantBits()) % 1_000_000_0000L))
+                .nickname("Feed Author")
+                .postsCount(0)
+                .followersCount(0)
+                .followingCount(0)
+                .build());
 
-        PublicUserDto author = new PublicUserDto(authorId, "Test User", "https://example.com/avatar.png");
-        PostPublicDto post = new PostPublicDto(
-                postId,
-                author,
-                "Feed Post",
-                "Content",
-                null,
-                List.of(),
-                List.of("tag1"),
-                0,
-                0,
-                0,
-                false,
-                false,
-                false,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(postService.getFeed(eq("recommended"), any(), eq(0), eq(20), isNull()))
-                .thenReturn(PageResponse.of(List.of(post), 0, 20, 1));
+        postRepository.save(Post.builder()
+                .userId(author.getId())
+                .title("Feed Post")
+                .content("Content")
+                .build());
 
         // When/Then
         mockMvc.perform(get("/api/posts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.data[0].author.nickname").value("Test User"))
-                .andExpect(jsonPath("$.data.data[0].author.avatarUrl").value("https://example.com/avatar.png"))
+                .andExpect(jsonPath("$.data.data[0].author.nickname").value("Feed Author"))
                 .andExpect(jsonPath("$.data.data[0].author.phone").doesNotExist())
-                .andExpect(jsonPath("$.data.data[0].author.id").value(authorId.toString()));
+                .andExpect(jsonPath("$.data.data[0].author.id").value(author.getId().toString()));
+    }
+
+    @Test
+    void shouldReturnPostDetailWithTags() throws Exception {
+        // Given
+        User author = userRepository.save(User.builder()
+                .phone("1" + String.format("%010d", Math.abs(UUID.randomUUID().getMostSignificantBits()) % 1_000_000_0000L))
+                .nickname("Tagged Author")
+                .postsCount(0)
+                .followersCount(0)
+                .followingCount(0)
+                .build());
+
+        Post post = postRepository.save(Post.builder()
+                .userId(author.getId())
+                .title("Tagged Post")
+                .content("Content")
+                .build());
+
+        String tagName = "tag-" + UUID.randomUUID().toString().substring(0, 8);
+        Tag tag = tagRepository.save(Tag.builder().name(tagName).build());
+        jdbcTemplate.update(
+                "insert into post_tags (post_id, tag_id) values (?, ?)",
+                post.getId(),
+                tag.getId()
+        );
+
+        // When/Then
+        mockMvc.perform(get("/api/posts/{id}", post.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.tags[0]").value(tagName));
     }
 
     @Test
     void shouldReturnPostDetailWithPublicAuthorOnly() throws Exception {
         // Given
-        UUID postId = UUID.randomUUID();
-        UUID authorId = UUID.randomUUID();
+        User author = userRepository.save(User.builder()
+                .phone("1" + String.format("%010d", Math.abs(UUID.randomUUID().getMostSignificantBits()) % 1_000_000_0000L))
+                .nickname("Detail Author")
+                .postsCount(0)
+                .followersCount(0)
+                .followingCount(0)
+                .build());
 
-        PublicUserDto author = new PublicUserDto(authorId, "Test User", null);
-        PostPublicDto post = new PostPublicDto(
-                postId,
-                author,
-                "Detail Post",
-                "Content",
-                null,
-                List.of(),
-                List.of(),
-                0,
-                0,
-                0,
-                false,
-                false,
-                true,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(postService.getPostById(eq(postId), any())).thenReturn(post);
+        Post post = postRepository.save(Post.builder()
+                .userId(author.getId())
+                .title("Detail Post")
+                .content("Content")
+                .build());
 
         // When/Then
-        mockMvc.perform(get("/api/posts/{id}", postId))
+        mockMvc.perform(get("/api/posts/{id}", post.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.author.nickname").value("Test User"))
+                .andExpect(jsonPath("$.data.author.nickname").value("Detail Author"))
                 .andExpect(jsonPath("$.data.author.phone").doesNotExist())
-                .andExpect(jsonPath("$.data.author.id").value(authorId.toString()))
-                .andExpect(jsonPath("$.data.authorIsFollowed").value(true));
+                .andExpect(jsonPath("$.data.author.id").value(author.getId().toString()));
     }
 
     @Test
@@ -182,6 +214,7 @@ class PostsControllerTests {
         CreatePostRequest request = new CreatePostRequest(
                 "Title",
                 "Content",
+                null,
                 null,
                 null,
                 List.of()

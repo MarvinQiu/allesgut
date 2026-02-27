@@ -11,6 +11,7 @@ public record PostPublicDto(
         String content,
         String mediaType,
         List<String> mediaUrls,
+        String coverUrl,
         List<String> tags,
         Integer likesCount,
         Integer commentsCount,

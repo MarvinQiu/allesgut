@@ -53,6 +53,7 @@ public class PostService {
                 .content(request.content())
                 .mediaType(request.mediaType())
                 .mediaUrls(request.mediaUrls())
+                .coverUrl(request.coverUrl())
                 .build();
 
         post = postRepository.save(post);
@@ -71,6 +72,7 @@ public class PostService {
                         });
                 tag.setUsageCount(tag.getUsageCount() + 1);
                 tagRepository.save(tag);
+                postRepository.savePostTag(post.getId(), tag.getId());
                 tagNames.add(tag.getName());
             }
         }
@@ -120,7 +122,8 @@ public class PostService {
                     boolean isAuthorFollowed = currentUserId != null && author != null &&
                             userFollowRepository.existsByFollowerIdAndFollowingId(currentUserId, author.getId());
 
-                    return mapToPublicDto(post, author, List.of(), isLiked, isFavorited, isAuthorFollowed);
+                    List<String> tags = postRepository.findTagNamesByPostId(post.getId());
+                    return mapToPublicDto(post, author, tags, isLiked, isFavorited, isAuthorFollowed);
                 })
                 .toList();
 
@@ -160,8 +163,7 @@ public class PostService {
         boolean isFavorited = currentUserId != null &&
                 postFavoriteRepository.existsByUserIdAndPostId(currentUserId, postId);
 
-        // Get tags for this post (simplified - you'd need a proper junction table query)
-        List<String> tags = List.of(); // TODO: Implement proper tag fetching
+        List<String> tags = postRepository.findTagNamesByPostId(postId);
 
         boolean isAuthorFollowed = currentUserId != null &&
                 userFollowRepository.existsByFollowerIdAndFollowingId(currentUserId, author.getId());
@@ -283,6 +285,7 @@ public class PostService {
                 post.getContent(),
                 post.getMediaType(),
                 post.getMediaUrls(),
+                post.getCoverUrl(),
                 tags,
                 post.getLikesCount(),
                 post.getCommentsCount(),
@@ -313,6 +316,7 @@ public class PostService {
                 post.getContent(),
                 post.getMediaType(),
                 post.getMediaUrls(),
+                post.getCoverUrl(),
                 tags,
                 post.getLikesCount(),
                 post.getCommentsCount(),

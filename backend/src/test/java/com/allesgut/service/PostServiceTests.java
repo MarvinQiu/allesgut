@@ -73,6 +73,7 @@ class PostServiceTests {
                 "Test Content",
                 null,
                 null,
+                null,
                 List.of("tag1", "tag2")
         );
 
@@ -96,6 +97,7 @@ class PostServiceTests {
         assertThat(result).isNotNull();
         assertThat(result.title()).isEqualTo("Test Title");
         assertThat(result.content()).isEqualTo("Test Content");
+        assertThat(result.coverUrl()).isNull();
         verify(postRepository).save(any(Post.class));
         verify(userRepository).save(testUser);
         assertThat(testUser.getPostsCount()).isEqualTo(1);
@@ -107,6 +109,7 @@ class PostServiceTests {
         CreatePostRequest request = new CreatePostRequest(
                 "", // Invalid empty title
                 "Test Content",
+                null,
                 null,
                 null,
                 List.of()
@@ -140,6 +143,85 @@ class PostServiceTests {
         // Then
         assertThat(result.getData()).hasSize(1);
         assertThat(result.getTotal()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldCreatePostAndReturnCoverUrl() {
+        // Given
+        CreatePostRequest request = new CreatePostRequest(
+                "Video",
+                "Content",
+                "video",
+                List.of("https://example.com/v.mp4"),
+                "https://example.com/cover.jpg",
+                List.of()
+        );
+
+        Post savedPost = Post.builder()
+                .id(UUID.randomUUID())
+                .userId(testUser.getId())
+                .title(request.title())
+                .content(request.content())
+                .mediaType(request.mediaType())
+                .mediaUrls(request.mediaUrls())
+                .coverUrl(request.coverUrl())
+                .build();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(postRepository.save(any(Post.class))).thenReturn(savedPost);
+
+        // When
+        PostDto result = postService.createPost(testUser.getId(), request);
+
+        // Then
+        assertThat(result.coverUrl()).isEqualTo("https://example.com/cover.jpg");
+    }
+
+    @Test
+    void shouldCreatePostAndPersistTagsInJoinTable() {
+        // Given
+        CreatePostRequest request = new CreatePostRequest(
+                "Tagged",
+                "Content",
+                null,
+                null,
+                null,
+                List.of("tag-a", "tag-b")
+        );
+
+        User author = User.builder()
+                .id(testUser.getId())
+                .phone(testUser.getPhone())
+                .nickname(testUser.getNickname())
+                .postsCount(0)
+                .build();
+
+        Post savedPost = Post.builder()
+                .id(UUID.randomUUID())
+                .userId(author.getId())
+                .title(request.title())
+                .content(request.content())
+                .build();
+
+        when(userRepository.findById(author.getId())).thenReturn(Optional.of(author));
+        when(postRepository.save(any(Post.class))).thenReturn(savedPost);
+
+        Tag tagA = Tag.builder().id(1L).name("tag-a").usageCount(0).build();
+        Tag tagB = Tag.builder().id(2L).name("tag-b").usageCount(0).build();
+
+        when(tagRepository.findByName("tag-a")).thenReturn(Optional.of(tagA));
+        when(tagRepository.findByName("tag-b")).thenReturn(Optional.of(tagB));
+        when(tagRepository.save(any(Tag.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        postService.createPost(author.getId(), request);
+
+        // Then
+        verify(postRepository).save(any(Post.class));
+
+        // Expect join table insert to be performed (fails before implementation)
+        verify(postRepository).savePostTag(savedPost.getId(), tagA.getId());
+        verify(postRepository).savePostTag(savedPost.getId(), tagB.getId());
     }
 
     @Test

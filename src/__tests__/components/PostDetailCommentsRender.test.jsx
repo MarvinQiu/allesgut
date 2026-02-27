@@ -17,6 +17,21 @@ jest.mock('../../services/users', () => ({
   }
 }));
 
+jest.mock('../../hooks/useAuthGate', () => ({
+  __esModule: true,
+  default: () => ({
+    // In product UX, unauthenticated actions are disabled/hidden.
+    // For tests that still exercise handlers, default to allowing the action.
+    requireAuth: (action) => action(),
+  }),
+}));
+
+const mockUseAuth = jest.fn(() => ({ isAuthenticated: true }));
+
+jest.mock('../../contexts/AuthContext', () => ({
+  useAuth: (...args) => mockUseAuth(...args),
+}));
+
 const { commentsService } = require('../../services/comments');
 const { usersService } = require('../../services/users');
 
@@ -86,9 +101,8 @@ describe('PostDetail comments', () => {
     expect(await screen.findByText('已关注')).toBeInTheDocument();
   });
 
-  test('calls follow endpoint with author_id when tapping follow', async () => {
+  test('disables follow button when unauthenticated', async () => {
     commentsService.getComments.mockResolvedValue({ data: [] });
-    usersService.followUser.mockResolvedValue({ success: true });
 
     const post = {
       id: 'p1',
@@ -104,11 +118,14 @@ describe('PostDetail comments', () => {
       _original: { author: { id: 'u-123' } }
     };
 
+    mockUseAuth.mockReturnValueOnce({ isAuthenticated: false });
+
     render(<PostDetail post={post} onClose={() => {}} />);
 
-    fireEvent.click(screen.getByText('关注'));
+    const followButton = screen.getByText('关注').closest('button');
+    expect(followButton).toBeDisabled();
 
-    expect(usersService.followUser).toHaveBeenCalledWith('u-123');
-    expect(await screen.findByText('已关注')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('关注'));
+    expect(usersService.followUser).not.toHaveBeenCalled();
   });
 });

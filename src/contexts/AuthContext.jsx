@@ -6,6 +6,8 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   // Restore session on mount
   useEffect(() => {
@@ -48,6 +50,22 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => prev ? { ...prev, ...updates } : null);
   }, []);
 
+  const openLoginModal = useCallback(() => setIsLoginModalOpen(true), []);
+  const closeLoginModal = useCallback(() => setIsLoginModalOpen(false), []);
+
+  const requireAuth = useCallback(
+    (action) => {
+      if (user) {
+        action?.();
+        return;
+      }
+
+      setPendingAction(() => action || null);
+      setIsLoginModalOpen(true);
+    },
+    [user]
+  );
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -55,6 +73,12 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateUser,
+    isLoginModalOpen,
+    openLoginModal,
+    closeLoginModal,
+    requireAuth,
+    pendingAction,
+    setPendingAction,
   };
 
   return (

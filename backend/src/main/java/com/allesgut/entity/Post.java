@@ -40,6 +40,9 @@ public class Post {
     @Column(name = "media_urls", columnDefinition = "jsonb")
     private List<String> mediaUrls;
 
+    @Column(name = "cover_url", length = 500)
+    private String coverUrl;
+
     @Builder.Default
     @Column(name = "likes_count")
     private Integer likesCount = 0;
