@@ -11,6 +11,7 @@ const PostDetail = ({ post, onClose }) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [likes, setLikes] = useState(post?.likes || 0);
+  const [favorites, setFavorites] = useState(post?.favorites || 0);
 
   const [isLiked, setIsLiked] = useState(post?.is_liked || false);
   const [isFavorited, setIsFavorited] = useState(post?.is_favorited || false);
@@ -53,7 +54,7 @@ const PostDetail = ({ post, onClose }) => {
   };
 
   const handleLike = async () => {
-    if (isLikeLoading) return;
+    if (!isAuthenticated || isLikeLoading) return;
     setIsLikeLoading(true);
     try {
       if (isLiked) {
@@ -72,13 +73,15 @@ const PostDetail = ({ post, onClose }) => {
   };
 
   const handleFavorite = async () => {
-    if (isFavoriteLoading) return;
+    if (!isAuthenticated || isFavoriteLoading) return;
     setIsFavoriteLoading(true);
     try {
       if (isFavorited) {
         await postsService.unfavoritePost(post.id);
+        setFavorites(prev => prev - 1);
       } else {
         await postsService.favoritePost(post.id);
+        setFavorites(prev => prev + 1);
       }
       setIsFavorited(!isFavorited);
     } catch (error) {
@@ -294,10 +297,10 @@ const PostDetail = ({ post, onClose }) => {
           <div className="flex items-center space-x-4">
             <button
               onClick={handleLike}
-              disabled={isLikeLoading}
+              disabled={!isAuthenticated || isLikeLoading}
               className={`flex items-center space-x-1 transition-colors duration-200 cursor-pointer ${
                 isLiked ? 'text-secondary-500' : 'text-primary-500 hover:text-secondary-400'
-              } ${isLikeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${!isAuthenticated || isLikeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               aria-label={isLiked ? '取消点赞' : '点赞'}
               aria-pressed={isLiked}
             >
@@ -316,10 +319,10 @@ const PostDetail = ({ post, onClose }) => {
 
             <button
               onClick={handleFavorite}
-              disabled={isFavoriteLoading}
+              disabled={!isAuthenticated || isFavoriteLoading}
               className={`flex items-center space-x-1 transition-colors duration-200 cursor-pointer ${
                 isFavorited ? 'text-accent-500' : 'text-primary-500 hover:text-accent-400'
-              } ${isFavoriteLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${!isAuthenticated || isFavoriteLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               aria-label={isFavorited ? '取消收藏' : '收藏'}
               aria-pressed={isFavorited}
             >
@@ -333,7 +336,7 @@ const PostDetail = ({ post, onClose }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
               )}
-              <span className="text-sm font-medium">{post.favorites || 0}</span>
+              <span className="text-sm font-medium">{favorites}</span>
             </button>
 
             <button

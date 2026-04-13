@@ -38,13 +38,17 @@ public class PostsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String search,
             Authentication authentication) {
+
+        int safePage = Math.max(0, page);
+        int safeLimit = Math.max(1, Math.min(100, limit));
 
         UUID currentUserId = authentication != null && authentication.isAuthenticated()
                 ? UUID.fromString(authentication.getName())
                 : null;
 
-        PageResponse<PostPublicDto> feed = postService.getFeed(feedType, currentUserId, page, limit, tag);
+        PageResponse<PostPublicDto> feed = postService.getFeed(feedType, currentUserId, safePage, safeLimit, tag, search);
         return ResponseEntity.ok(ApiResponse.success(feed));
     }
 

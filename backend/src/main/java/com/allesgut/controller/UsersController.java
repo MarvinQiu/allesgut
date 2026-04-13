@@ -72,7 +72,9 @@ public class UsersController {
                 ? UUID.fromString(authentication.getName())
                 : null;
 
-        PageResponse<UserDto> followers = userService.getFollowers(id, currentUserId, page, limit);
+        int safePage = Math.max(0, page);
+        int safeLimit = Math.max(1, Math.min(100, limit));
+        PageResponse<UserDto> followers = userService.getFollowers(id, currentUserId, safePage, safeLimit);
         return ResponseEntity.ok(ApiResponse.success(followers));
     }
 
@@ -86,7 +88,9 @@ public class UsersController {
                 ? UUID.fromString(authentication.getName())
                 : null;
 
-        PageResponse<UserDto> following = userService.getFollowing(id, currentUserId, page, limit);
+        int safePage = Math.max(0, page);
+        int safeLimit = Math.max(1, Math.min(100, limit));
+        PageResponse<UserDto> following = userService.getFollowing(id, currentUserId, safePage, safeLimit);
         return ResponseEntity.ok(ApiResponse.success(following));
     }
 
@@ -101,7 +105,9 @@ public class UsersController {
                     .body(ApiResponse.error("Search query is required"));
         }
 
-        PageResponse<UserDto> users = userService.searchUsers(q, page, limit);
+        int safePage = Math.max(0, page);
+        int safeLimit = Math.max(1, Math.min(100, limit));
+        PageResponse<UserDto> users = userService.searchUsers(q, safePage, safeLimit);
         return ResponseEntity.ok(ApiResponse.success(users));
     }
 
@@ -116,7 +122,9 @@ public class UsersController {
                 ? UUID.fromString(authentication.getName())
                 : null;
 
-        PageResponse<PostDto> posts = postService.getUserPosts(id, currentUserId, page, limit);
+        int safePage = Math.max(0, page);
+        int safeLimit = Math.max(1, Math.min(100, limit));
+        PageResponse<PostDto> posts = postService.getUserPosts(id, currentUserId, safePage, safeLimit);
         return ResponseEntity.ok(ApiResponse.success(posts));
     }
 }

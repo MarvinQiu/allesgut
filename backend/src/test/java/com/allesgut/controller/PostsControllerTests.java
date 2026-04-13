@@ -209,6 +209,42 @@ class PostsControllerTests extends com.allesgut.LocalhostSchemaTestBase {
     }
 
     @Test
+    void shouldSearchPostsByTitleOrContent() throws Exception {
+        // Given
+        User author = userRepository.save(User.builder()
+                .phone("1" + String.format("%010d", Math.abs(UUID.randomUUID().getMostSignificantBits()) % 1_000_000_0000L))
+                .nickname("Search Author")
+                .postsCount(0)
+                .followersCount(0)
+                .followingCount(0)
+                .build());
+
+        postRepository.save(Post.builder()
+                .userId(author.getId())
+                .title("感统训练技巧")
+                .content("一些训练方法")
+                .build());
+
+        postRepository.save(Post.builder()
+                .userId(author.getId())
+                .title("日常分享")
+                .content("包含感统训练的内容")
+                .build());
+
+        postRepository.save(Post.builder()
+                .userId(author.getId())
+                .title("无关内容")
+                .content("其他话题")
+                .build());
+
+        // When/Then — search should find posts matching title or content
+        mockMvc.perform(get("/api/posts").param("search", "感统训练"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.data.length()").value(2));
+    }
+
+    @Test
     void shouldRejectUnauthenticatedRequest() throws Exception {
         // Given
         CreatePostRequest request = new CreatePostRequest(

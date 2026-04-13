@@ -18,6 +18,10 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
     Page<Post> findByUserIdInOrderByCreatedAtDesc(List<UUID> userIds, Pageable pageable);
 
+    @Query("SELECT p FROM Post p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(p.content) LIKE LOWER(CONCAT('%', :search, '%')) ORDER BY p.createdAt DESC")
+    Page<Post> searchByTitleOrContent(@Param("search") String search, Pageable pageable);
+
     @Modifying
     @Query(value = "insert into post_tags (post_id, tag_id) values (:postId, :tagId)", nativeQuery = true)
     void savePostTag(@Param("postId") UUID postId, @Param("tagId") Long tagId);

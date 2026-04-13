@@ -37,12 +37,16 @@ public class CommentsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int limit,
             Authentication authentication) {
-        UUID currentUserId = authentication != null
+        int safePage = Math.max(0, page);
+        int safeLimit = Math.max(1, Math.min(100, limit));
+
+        UUID currentUserId = authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getName())
                 ? UUID.fromString(authentication.getName())
                 : null;
 
         PageResponse<CommentDto> comments = commentService.getCommentsByPost(
-                postId, currentUserId, page, limit);
+                postId, currentUserId, safePage, safeLimit);
         return ResponseEntity.ok(ApiResponse.success(comments));
     }
 

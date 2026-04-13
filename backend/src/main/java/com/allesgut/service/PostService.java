@@ -91,11 +91,14 @@ public class PostService {
     }
 
     public PageResponse<PostPublicDto> getFeed(String feedType, UUID currentUserId,
-                                               int page, int limit, String tag) {
+                                               int page, int limit, String tag, String search) {
         Pageable pageable = PageRequest.of(page, limit);
         Page<Post> postsPage;
 
-        if ("following".equals(feedType) && currentUserId != null) {
+        if (search != null && !search.trim().isEmpty()) {
+            // Search takes priority — search across all posts by title/content
+            postsPage = postRepository.searchByTitleOrContent(search.trim(), pageable);
+        } else if ("following".equals(feedType) && currentUserId != null) {
             // Get posts from users that current user follows
             List<UUID> followingIds = userFollowRepository
                     .findByFollowerId(currentUserId)

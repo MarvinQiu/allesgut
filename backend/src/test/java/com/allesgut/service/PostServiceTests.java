@@ -138,7 +138,7 @@ class PostServiceTests {
                 .thenReturn(Optional.of(testUser));
 
         // When
-        PageResponse<PostPublicDto> result = postService.getFeed("recommended", null, 0, 20, null);
+        PageResponse<PostPublicDto> result = postService.getFeed("recommended", null, 0, 20, null, null);
 
         // Then
         assertThat(result.getData()).hasSize(1);

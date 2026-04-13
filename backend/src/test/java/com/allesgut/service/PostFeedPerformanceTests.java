@@ -66,6 +66,7 @@ class PostFeedPerformanceTests extends LocalhostSchemaTestBase {
                 UUID.randomUUID(),
                 0,
                 postCount,
+                null,
                 null
         );
 

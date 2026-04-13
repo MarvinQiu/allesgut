@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PostDetail from '../../components/PostDetail';
 
 jest.mock('../../services/comments', () => ({
@@ -9,7 +9,14 @@ jest.mock('../../services/comments', () => ({
   }
 }));
 
-jest.mock('../../services/posts', () => ({ postsService: {} }));
+jest.mock('../../services/posts', () => ({
+  postsService: {
+    favoritePost: jest.fn().mockResolvedValue({}),
+    unfavoritePost: jest.fn().mockResolvedValue({}),
+    likePost: jest.fn().mockResolvedValue({}),
+    unlikePost: jest.fn().mockResolvedValue({}),
+  }
+}));
 jest.mock('../../services/users', () => ({
   usersService: {
     followUser: jest.fn(),
@@ -34,6 +41,7 @@ jest.mock('../../contexts/AuthContext', () => ({
 
 const { commentsService } = require('../../services/comments');
 const { usersService } = require('../../services/users');
+const { postsService } = require('../../services/posts');
 
 describe('PostDetail comments', () => {
   test('renders comment author from nested author object', async () => {
@@ -127,5 +135,73 @@ describe('PostDetail comments', () => {
 
     fireEvent.click(screen.getByText('关注'));
     expect(usersService.followUser).not.toHaveBeenCalled();
+  });
+
+  test('disables like and favorite buttons when unauthenticated', async () => {
+    commentsService.getComments.mockResolvedValue({ data: [] });
+
+    const post = {
+      id: 'p1',
+      title: 'T',
+      content: 'C',
+      author: 'Someone',
+      avatar: 'https://example.com/a.png',
+      time: 'now',
+      likes: 3,
+      comments: 0,
+      favorites: 2,
+      images: ['https://example.com/i.png'],
+      author_id: 'u1',
+    };
+
+    mockUseAuth.mockReturnValueOnce({ isAuthenticated: false });
+
+    render(<PostDetail post={post} onClose={() => {}} />);
+
+    const likeButton = screen.getByLabelText('点赞');
+    const favoriteButton = screen.getByLabelText('收藏');
+
+    expect(likeButton).toBeDisabled();
+    expect(favoriteButton).toBeDisabled();
+
+    fireEvent.click(likeButton);
+    fireEvent.click(favoriteButton);
+
+    expect(postsService.likePost).not.toHaveBeenCalled();
+    expect(postsService.favoritePost).not.toHaveBeenCalled();
+  });
+
+  test('favorites count updates optimistically after toggling', async () => {
+    commentsService.getComments.mockResolvedValue({ data: [] });
+    postsService.favoritePost.mockResolvedValue({});
+
+    const post = {
+      id: 'p1',
+      title: 'T',
+      content: 'C',
+      author: 'Someone',
+      avatar: 'https://example.com/a.png',
+      time: 'now',
+      likes: 0,
+      comments: 0,
+      favorites: 5,
+      is_favorited: false,
+      images: ['https://example.com/i.png'],
+      author_id: 'u1',
+    };
+
+    render(<PostDetail post={post} onClose={() => {}} />);
+
+    // Initially shows 5
+    const favoriteButton = screen.getByLabelText('收藏');
+    expect(favoriteButton.closest('button').textContent).toContain('5');
+
+    // Click favorite
+    fireEvent.click(favoriteButton);
+
+    // Count should update to 6
+    await waitFor(() => {
+      expect(favoriteButton.closest('button').textContent).toContain('6');
+    });
   });
 });
